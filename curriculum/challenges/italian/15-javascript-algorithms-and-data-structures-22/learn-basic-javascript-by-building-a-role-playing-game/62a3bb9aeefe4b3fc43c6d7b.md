@@ -1,32 +1,28 @@
 ---
-id: 62a3b49686792938718b90d3
-title: Step 26
+id: 62a3bb9aeefe4b3fc43c6d7b
+title: Step 31
 challengeType: 0
-dashedName: step-26
+dashedName: step-31
 ---
 
 # --description--
 
-The variables you have assigned have all had values that are numbers. JavaScript has multiple different data types. The next one you will use is the <dfn>string</dfn>. Strings are used to store things like words or text. Strings are surrounded with double quotes, single quotes, or backticks. Here is an example of declaring a variable with a string:
+`button1` è una variabile che non sarà riassegnata. Se non riassegnerai un nuovo valore a una variabile, è una buona pratica dichiararla usando la parola chiave `const` invece della parola chiave `let`. In questo modo JavaScript ti darà un errore se la riassegni accidentalmente.
 
-```js
-let developer = "Naomi";
-```
-
-Assign the `inventory` variable to have the value of `stick`.
+Cambia la variabile `button1` in modo che sia dichiarata con la parola chiave `const`.
 
 # --hints--
 
-You should set `inventory` to the string `stick`.
+La variabile `button1` dovrebbe essere dichiarata con `const`.
 
 ```js
-assert.equal(inventory, "stick");
+assert.match(code, /const button1/);
 ```
 
-You should initialize your `inventory` variable with the string `stick`.
+La variabile `button1` dovrebbe ancora avere il valore dell'elemento `#button1`.
 
 ```js
-assert.match(code, /let\s+inventory\s*=\s*('|"|`)stick\1/);
+assert.deepEqual(button1, document.querySelector("#button1"));
 ```
 
 # --seed--
@@ -40,7 +36,6 @@ assert.match(code, /let\s+inventory\s*=\s*('|"|`)stick\1/);
     <meta charset="utf-8">
     <link rel="stylesheet" href="./styles.css">
     <title>RPG - Dragon Repeller</title>
-    <script src="./script.js"></script>
 </head>
 <body>
     <div id="game">
@@ -62,6 +57,7 @@ assert.match(code, /let\s+inventory\s*=\s*('|"|`)stick\1/);
             Welcome to Dragon Repeller. You must defeat the dragon that is preventing people from leaving the town. You are in the town square. Where do you want to go? Use the buttons above.
         </div>
     </div>
+    <script src="./script.js"></script>
 </body>
 </html>
 ```
@@ -106,13 +102,15 @@ body {
 ```
 
 ```js
---fcc-editable-region--
 let xp = 0;
 let health = 100;
 let gold = 50;
 let currentWeapon = 0;
 let fighting;
 let monsterHealth;
-let inventory;
+let inventory = ["stick"];
+
+--fcc-editable-region--
+let button1 = document.querySelector("#button1");
 --fcc-editable-region--
 ```
