@@ -12,13 +12,19 @@ dashedName: request-header-parser-microservice
 
 -   Клонуйте <a href="https://github.com/freeCodeCamp/boilerplate-project-headerparser/" target="_blank" rel="noopener noreferrer nofollow">цей репозиторій GitHub</a> та виконайте свій проєкт локально.
 -   Використайте <a href="https://replit.com/github/freeCodeCamp/boilerplate-project-headerparser" target="_blank" rel="noopener noreferrer nofollow">наш стартовий проєкт Replit</a> для виконання свого проєкту.
--   Використати конструктор сайтів на свій вибір для завершення проекту. Впевніться, що ви зберегли всі файли із нашого GitHub репозиторію.
+-   Для виконання проєкту використайте конструктор сайту на власний вибір. Переконайтеся, що приєднали усі файли з нашого репозиторію GitHub.
 
-По завершенню переконайтеся, що працююча демоверсія вашого проекту розміщена у відкритому доступі. Потім введіть його URL-адресу в поле `Solution Link`. За бажанням також можете ввести посилання на вихідний код вашого проекту в полі `GitHub Link`.
+Якщо ви використовуєте Replit, виконайте наступні кроки для налаштування проєкту:
+
+-   Почніть з імпорту проєкту на Replit.
+-   Потім ви побачите вікно `.replit`.
+-   Оберіть `Use run command` та натисніть кнопку `Done`.
+
+Після завершення переконайтеся, що демоверсія проєкту розміщена у відкритому доступі. Потім введіть URL-адресу проєкту у поле `Solution Link`. Optionally, also submit a link to your project's source code in the `GitHub Link` field.
 
 # --hints--
 
-Вам необхідно вказати свій власний проект, а не приклад URL-адреси.
+You should provide your own project, not the example URL.
 
 ```js
 (getUserInput) => {
@@ -30,7 +36,7 @@ dashedName: request-header-parser-microservice
 };
 ```
 
-Запит на `/api/whoami` повинен повернути об'єкт JSON з вашою IP-адресою у ключі `ipaddress`.
+A request to `/api/whoami` should return a JSON object with your IP address in the `ipaddress` key.
 
 ```js
 (getUserInput) =>
@@ -42,7 +48,7 @@ dashedName: request-header-parser-microservice
   );
 ```
 
-Запит на `/api/whoami` повинен повернути об’єкт JSON з вашою бажаною мовою у ключі `language`.
+A request to `/api/whoami` should return a JSON object with your preferred language in the `language` key.
 
 ```js
 (getUserInput) =>
@@ -54,7 +60,7 @@ dashedName: request-header-parser-microservice
   );
 ```
 
-Запит на `/api/whoami` повинен повернути об'єкт JSON з вашим програмним забезпеченням у ключі `software`.
+A request to `/api/whoami` should return a JSON object with your software in the `software` key.
 
 ```js
 (getUserInput) =>

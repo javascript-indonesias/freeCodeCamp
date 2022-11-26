@@ -8,27 +8,33 @@ dashedName: meet-the-node-console
 
 # --description--
 
-Робота над цими завданнями передбачає написання коду одним із таких методів:
+Робота над цими завданнями передбачає написання коду за допомогою одного з наступних методів:
 
-- Клонуйте <a href="https://github.com/freeCodeCamp/boilerplate-express/" target="_blank" rel="noopener noreferrer nofollow">цей репозиторій GitHub</a> та виконайте ці завдання локально.
+- Клонуйте <a href="https://github.com/freeCodeCamp/boilerplate-express/" target="_blank" rel="noopener noreferrer nofollow">цей репозиторій GitHub</a> та виконайте завдання локально.
 - Використайте <a href="https://replit.com/github/freeCodeCamp/boilerplate-express" target="_blank" rel="noopener noreferrer nofollow">наш стартовий проєкт Replit</a> для виконання цих завдань.
-- Для виконання проєкту скористуйтеся будь-яким конструктором сайтів на ваш розсуд. Впевніться, що ви маєте усі файли з нашого GitHub репозиторію.
+- Для виконання проєкту використайте конструктор сайту на власний вибір. Переконайтеся, що приєднали усі файли з нашого репозиторію GitHub.
 
-Коли ви завершили, переконайтеся, що демоверсія вашого проєкту розміщена у відкритому доступі. Потім введіть URL-адресу проєкту у поле `Solution Link`.
+Якщо ви використовуєте Replit, виконайте наступні кроки для налаштування проєкту:
 
-Під час процесу розробки важливо перевіряти, що відбувається у коді.
+-   Почніть з імпорту проєкту на Replit.
+-   Потім ви побачите вікно `.replit`.
+-   Оберіть `Use run command` та натисніть кнопку `Done`.
 
-Node - це всього лише середовище JavaScript. Як у клієнтському JavaScript, ви можете використовувати консоль для відображення корисної інформації для налагодження недоліків. На вашому локальному комп'ютері ви побачите вивід консолі в терміналі. На Replit термінал відкритий на правій панелі за замовчуванням.
+Після завершення переконайтеся, що демоверсія проєкту розміщена у відкритому доступі. Потім введіть URL-адресу проєкту у поле `Solution Link`.
 
-Ми рекомендуємо тримати термінал відкритим під час роботи над цими завданнями. Читаючи вивід в терміналі, ви можете побачити будь-які помилки, що можуть виникнути.
+During the development process, it is important to be able to check what’s going on in your code.
+
+Node is just a JavaScript environment. Like client side JavaScript, you can use the console to display useful debug information. On your local machine, you would see console output in a terminal. On Replit, a terminal is open in the right pane by default.
+
+We recommend to keep the terminal open while working at these challenges. By reading the output in the terminal, you can see any errors that may occur.
 
 # --instructions--
 
-Модифікуйте `myApp.js` для виводу "Hello World" на консоль.
+Modify the `myApp.js` file to log "Hello World" to the console.
 
 # --hints--
 
-`"Hello World"` має бути в консолі
+`"Hello World"` should be in the console
 
 ```js
 (getUserInput) =>
