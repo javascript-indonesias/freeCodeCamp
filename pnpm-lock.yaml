@@ -289,7 +289,7 @@ importers:
       '@stripe/stripe-js': 1.48.0
       '@testing-library/jest-dom': 5.16.5
       '@testing-library/react': 12.1.5
-      '@total-typescript/ts-reset': ^0.3.7
+      '@total-typescript/ts-reset': ^0.4.0
       '@types/chai': ^4.3.4
       '@types/enzyme': ^3.10.12
       '@types/enzyme-adapter-react-16': 1.0.6
@@ -332,6 +332,7 @@ importers:
       core-js: 2.6.12
       crypto-browserify: 3.12.0
       date-fns: 2.29.3
+      dotenv: 16.0.3
       enzyme: 3.11.0
       enzyme-adapter-react-16: 1.15.7
       eslint: '7'
@@ -516,7 +517,7 @@ importers:
       '@codesee/babel-plugin-instrument': 0.531.0_@babel+core@7.20.12
       '@codesee/tracker': 0.531.0
       '@testing-library/react': 12.1.5_wcqkhtmu7mswc6yz4uyexck3ty
-      '@total-typescript/ts-reset': 0.3.7
+      '@total-typescript/ts-reset': 0.4.2
       '@types/chai': 4.3.4
       '@types/enzyme': 3.10.12
       '@types/enzyme-adapter-react-16': 1.0.6
@@ -548,6 +549,7 @@ importers:
       chokidar: 3.5.3
       copy-webpack-plugin: 9.1.0_webpack@5.76.1
       core-js: 2.6.12
+      dotenv: 16.0.3
       gatsby-plugin-webpack-bundle-analyser-v2: 1.1.30_gatsby@3.15.0
       jest-json-schema-extended: 1.0.1
       monaco-editor-webpack-plugin: 4.2.0_iq5jyfjbskrhrr45x6xdwyuq74
@@ -560,7 +562,12 @@ importers:
       webpack-cli: 4.10.0_webpack@5.76.1
 
   client/plugins/fcc-source-challenges:
-    specifiers: {}
+    specifiers:
+      chokidar: 3.5.3
+      readdirp: 3.6.0
+    devDependencies:
+      chokidar: 3.5.3
+      readdirp: 3.6.0
 
   client/plugins/gatsby-remark-node-identity:
     specifiers: {}
@@ -715,11 +722,11 @@ importers:
       js-yaml: 3.14.1
       lodash: 4.17.21
       mdast-builder: 1.1.1
-      mdast-util-from-markdown: 0.8.5
-      mdast-util-gfm: 0.1.2
+      mdast-util-directive: 1.0.1
       mdast-util-gfm-strikethrough: 0.2.3
       mdast-util-gfm-table: 0.1.6
       mdast-util-to-hast: 9.1.2
+      mdast-util-to-markdown: 0.6.5
       micromark-extension-gfm-strikethrough: 0.6.5
       micromark-extension-gfm-table: 0.4.3
       remark: 13.0.0
@@ -746,11 +753,11 @@ importers:
       js-yaml: 3.14.1
       lodash: 4.17.21
       mdast-builder: 1.1.1
-      mdast-util-from-markdown: 0.8.5
-      mdast-util-gfm: 0.1.2
+      mdast-util-directive: 1.0.1
       mdast-util-gfm-strikethrough: 0.2.3
       mdast-util-gfm-table: 0.1.6
       mdast-util-to-hast: 9.1.2
+      mdast-util-to-markdown: 0.6.5
       micromark-extension-gfm-strikethrough: 0.6.5
       micromark-extension-gfm-table: 0.4.3
       remark: 13.0.0
@@ -7780,8 +7787,8 @@ packages:
     resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
     engines: {node: '>= 6'}
 
-  /@total-typescript/ts-reset/0.3.7:
-    resolution: {integrity: sha512-yXt2BRRVCJVvzWaxac5n0nCXzIrQEBE/MeYlNQ8/Iq7UeelNmm/AdnUAu18ilSS893mbEQ4u6whPt/HvOPc4rw==}
+  /@total-typescript/ts-reset/0.4.2:
+    resolution: {integrity: sha512-vqd7ZUDSrXFVT1n8b2kc3LnklncDQFPvR58yUS1kEP23/nHPAO9l1lMjUfnPrXYYk4Hj54rrLKMW5ipwk7k09A==}
     dev: true
 
   /@trysound/sax/0.2.0:
