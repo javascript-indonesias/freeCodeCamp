@@ -24,6 +24,7 @@ type UniversalNavProps = Omit<
   NavLinksProps,
   'navigate' | 'toggleNightMode' | 'openSignoutModal'
 > & {
+  fetchState: { pending: boolean };
   searchBarRef?: React.RefObject<HTMLDivElement>;
 };
 export const UniversalNav = ({
@@ -56,11 +57,15 @@ export const UniversalNav = ({
       className={`universal-nav${displayMenu ? ' expand-nav' : ''}`}
       id='universal-nav'
     >
-      <div
-        className={`universal-nav-left${displayMenu ? ' display-search' : ''}`}
-      >
-        <Media minWidth={SEARCH_EXPOSED_WIDTH + 1}>{search}</Media>
-      </div>
+      <Media minWidth={SEARCH_EXPOSED_WIDTH + 1}>
+        <div
+          className={`universal-nav-left${
+            displayMenu ? ' display-search' : ''
+          }`}
+        >
+          {search}
+        </div>
+      </Media>
       <Link id='universal-nav-logo' to='/learn'>
         <NavLogo />
       </Link>
@@ -93,7 +98,6 @@ export const UniversalNav = ({
             <Media maxWidth={SEARCH_EXPOSED_WIDTH}>{search}</Media>
             <NavLinks
               displayMenu={displayMenu}
-              fetchState={fetchState}
               isLanguageMenuDisplayed={isLanguageMenuDisplayed}
               hideLanguageMenu={hideLanguageMenu}
               hideMenu={hideMenu}
