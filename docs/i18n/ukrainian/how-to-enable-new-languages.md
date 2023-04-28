@@ -2,13 +2,13 @@
 
 Before you can release a new language, you will need to allow the languages to download from Crowdin.
 
-## Updating Crowdin Settings
+## Оновлення налаштувань Crowdin
 
-In the `Curriculum` and `Learn UI` projects, you will need to select `Project Settings` from the sidebar. Then scroll down to `Language Mapping`, where you will see an option to add custom language codes. Add a new entry for the language you are releasing, selecting `language` as the `Placeholder` value, and entering a URL-friendly lower-case spelling of your language's name for the `Custom code`. If you aren't sure what to use, reach out in our contributor chat and we will assist you.
+На бічній панелі проєктів `Curriculum` та `Learn UI` вам потрібно обрати `Project Settings`. Прокрутіть вниз до `Language Mapping`, де ви побачите опцію додавання нового коду мови. Додайте нову мову, обравши значення `language` для `Placeholder` та ввівши назву мови у нижньому регістрі для `Custom code`. Якщо ви не впевнені, що вводити, ми допоможемо у нашому чаті помічників.
 
-## Updating Workflows
+## Оновлення потоку робіт
 
-You will need to add a step to the `crowdin-download.client-ui.yml` and `crowdin-download.curriculum.yml`. The step for these will be the same. For example, if you want to enable Dothraki downloads:
+Вам потрібно буде додати крок до `crowdin-download.client-ui.yml` та `crowdin-download.curriculum.yml`. Він буде однаковим. Наприклад, якщо ви хочете завантажувати дотракійську мову:
 
 ```yml
 ##### Download Dothraki #####
@@ -41,7 +41,7 @@ You will need to add a step to the `crowdin-download.client-ui.yml` and `crowdin
     # dryrun_action: true
 ```
 
-Note that the `download_language` key needs to be set to the language code displayed on Crowdin.
+Зауважте, що ключ `download_language` потрібно встановити на код мови, вказаний на Crowdin.
 
 ## Enabling a Language
 
@@ -66,7 +66,7 @@ export enum Languages {
   English = 'english',
   Espanol = 'espanol',
   Chinese = 'chinese',
-  ChineseTrandational = 'chinese-traditional',
+  ChineseTraditional = 'chinese-traditional',
   Dothraki = 'dothraki'
 }
 
@@ -75,14 +75,14 @@ export const availableLangs = {
     Languages.English,
     Languages.Espanol,
     Languages.Chinese,
-    Languages.ChineseTrandational,
+    Languages.ChineseTraditional,
     Languages.Dothraki
   ],
   curriculum: [
     Languages.English,
     Languages.Espanol,
     Languages.Chinese,
-    Languages.ChineseTrandational,
+    Languages.ChineseTraditional,
     Languages.Dothraki
   ]
 };
@@ -91,7 +91,7 @@ export const i18nextCodes = {
   [Languages.English]: 'en',
   [Languages.Espanol]: 'es',
   [Languages.Chinese]: 'zh',
-  [Languages.ChineseTrandational]: 'zh-Hant',
+  [Languages.ChineseTraditional]: 'zh-Hant',
   [Languages.Dothraki]: 'mis'
 };
 
@@ -99,7 +99,7 @@ export enum LangNames = {
   [Languages.English]: 'English',
   [Languages.Espanol]: 'Español',
   [Languages.Chinese]: '中文（简体字）',
-  [Languages.ChineseTrandational]: '中文（繁體字）',
+  [Languages.ChineseTraditional]: '中文（繁體字）',
   [Languages.Dothraki]: 'Dothraki'
 };
 
@@ -107,7 +107,7 @@ export enum LangCodes = {
   [Languages.English]: 'en-US',
   [Languages.Espanol]: 'es-419',
   [Languages.Chinese]: 'zh',
-  [Languages.ChineseTrandational]: 'zh-Hant',
+  [Languages.ChineseTraditional]: 'zh-Hant',
   [Languages.Dothraki]: 'mis'
 };
 
@@ -176,7 +176,7 @@ The order of the superblocks in this object is how they appear on the "Landing" 
 
 The `CurriculumMaps.Landing` array should contain exactly one superblock for all our current certifications, and the `CurriculumMaps.Learn` object should have all existing superblocks in it. Translated superblocks go in `TranslationStates.Audited` and non-translated superblocks go in `TranslationStates.NotAudited`. Each of those two objects has four different states a superblock can be in.
 
-- `SuperBlockStates.Current`: Means that the superblock is current, `(New) Responsive Web Design` for example.
+- `SuperBlockStates.Current`: Means that the superblock is current, `Responsive Web Design` for example.
 - `SuperBlockStates.New`: These only show up when `SHOW_NEW_CURRICULUM` is set to `true` in your `.env` file. It is for displaying new superblocks on a specific build. For example, when we released the new RWD, we only showed it on English to start.
 - `SuperBlockStates.Upcoming`: These only show up when `SHOW_UPCOMING_CHANGES` is set to `true` in your `.env` file. It is to show superblocks locally while they are in development. Or, if you just need to hide a superblock from the map for some other reason.
 - `SuperBlockStates.Legacy`: A superblock is moved here when a newer version of that superblock has been fully translated and replaced it.
