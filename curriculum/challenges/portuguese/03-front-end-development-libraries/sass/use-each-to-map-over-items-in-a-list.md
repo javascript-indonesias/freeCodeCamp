@@ -44,7 +44,7 @@ Note que a variável `$key` é necessária para referenciar as chaves no mapa. C
 
 # --instructions--
 
-Write an `@each` directive that goes through a list: `blue, black, red` and assigns each variable to a `.color-bg` class, where the `color` part changes for each item to the respective color. Each class should set the `background-color` to the respective color as well.
+Escreva uma diretiva `@each` que percorra uma lista, `blue, black, red`, e atribua cada variável à classe `.color-bg`, onde a parte `color` mude cada item para a cor respectiva. Cada classe também deve definir a propriedade `background-color` para a respectiva cor.
 
 # --hints--
 
