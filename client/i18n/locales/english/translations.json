@@ -403,7 +403,8 @@
     "building-a-university": "We're Building a Free Computer Science University Degree Program",
     "if-help-university": "We've already made a ton of progress. Support our charity with the long road ahead.",
     "qualified-for-exam": "Congratulations, you have completed all the requirements to qualify for the exam.",
-    "not-qualified-for-exam": "You have not met the requirements to be eligible for the exam. To qualify, please complete the following challenges:"
+    "not-qualified-for-exam": "You have not met the requirements to be eligible for the exam. To qualify, please complete the following challenges:",
+    "preview-external-window": "Preview currently showing in external window."
   },
   "donate": {
     "title": "Support our charity",
@@ -543,7 +544,8 @@
     "iframe-alert": "Normally this link would bring you to another website! It works. This is a link to: {{externalLink}}",
     "iframe-form-submit-alert": "Normally this form would be submitted! It works. This will be submitted to: {{externalLink}}",
     "document-notfound": "document not found",
-    "slow-load-msg": "Looks like this is taking longer than usual, please try refreshing the page."
+    "slow-load-msg": "Looks like this is taking longer than usual, please try refreshing the page.",
+    "navigation-warning": "If you leave this page, you will lose your progress. Are you sure?"
   },
   "icons": {
     "gold-cup": "Gold Cup",
