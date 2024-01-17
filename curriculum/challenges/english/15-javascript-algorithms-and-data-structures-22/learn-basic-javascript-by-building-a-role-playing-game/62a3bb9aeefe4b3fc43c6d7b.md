@@ -1,8 +1,8 @@
 ---
 id: 62a3bb9aeefe4b3fc43c6d7b
-title: Step 32
+title: Step 31
 challengeType: 0
-dashedName: step-32
+dashedName: step-31
 ---
 
 # --description--
@@ -16,7 +16,7 @@ Change your `button1` variable to be declared with the `const` keyword.
 Your `button1` variable should be declared with `const`.
 
 ```js
-assert.match(code, /const button1/);
+assert.match(code, /const\s+button1/);
 ```
 
 Your `button1` variable should still have the value of your `#button1` element.
