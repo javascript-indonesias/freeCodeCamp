@@ -177,7 +177,6 @@ export type ChallengeWithCompletedNode = {
 
 export type ChallengeNode = {
   challenge: {
-    audioPath: string;
     block: string;
     certification: string;
     challengeOrder: number;
@@ -358,6 +357,8 @@ export type SavedChallenge = {
   challengeFiles: SavedChallengeFiles;
 };
 
+// TODO: remove unused properties and stop returning them from api? (e.g.
+// history, ext, name)
 export type SavedChallengeFile = {
   fileKey: string;
   ext: Ext;

@@ -362,6 +362,26 @@ describe('userRoutes', () => {
         expect(userTokens).toHaveLength(1);
         expect(userTokens[0]?.userId).toBe(otherUserId);
       });
+
+      test("POST deletes all the user's cookies", async () => {
+        const res = await superPost('/account/delete');
+
+        const setCookie = res.headers['set-cookie'];
+        expect(setCookie).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /^jwt_access_token=; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+            ),
+            expect.stringMatching(
+              /^csrf_token=; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+            ),
+            expect.stringMatching(
+              /^_csrf=; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+            )
+          ])
+        );
+        expect(setCookie).toHaveLength(3);
+      });
     });
 
     describe('/account/reset-progress', () => {
@@ -769,7 +789,7 @@ describe('userRoutes', () => {
           from: 'team@freecodecamp.org',
           to: 'support@freecodecamp.org',
           cc: 'foo@bar.com',
-          subject: "Abuse Report: Reporting darth-vader's profile",
+          subject: "Abuse Report : Reporting darth-vader's profile.",
           text: `
 Hello Team,
 

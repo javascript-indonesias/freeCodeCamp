@@ -250,8 +250,8 @@ class Block extends Component<BlockProps> {
             <h3 className='block-grid-title'>
               <button
                 aria-expanded={isExpanded ? 'true' : 'false'}
+                aria-controls={`${blockDashedName}-panel`}
                 className='block-header'
-                data-cy={challengesWithCompleted[0].block}
                 onClick={() => {
                   this.handleBlockClick();
                 }}
@@ -272,24 +272,26 @@ class Block extends Component<BlockProps> {
                   progressBarRender}
               </button>
             </h3>
-            <div className='tags-wrapper'>
-              {!isAudited && (
+            {!isAudited && (
+              <div className='tags-wrapper'>
                 <Link
                   className='cert-tag'
                   to={t('links:help-translate-link-url')}
                 >
                   {t('misc.translation-pending')}
                 </Link>
-              )}
-            </div>
-            {isExpanded && <BlockIntros intros={blockIntroArr} />}
+              </div>
+            )}
             {isExpanded && (
-              <Challenges
-                challengesWithCompleted={challengesWithCompleted}
-                isProjectBlock={isProjectBlock}
-                isGridMap={true}
-                blockTitle={blockTitle}
-              />
+              <div id={`${blockDashedName}-panel`}>
+                <BlockIntros intros={blockIntroArr} />
+                <Challenges
+                  challengesWithCompleted={challengesWithCompleted}
+                  isProjectBlock={isProjectBlock}
+                  isGridMap={true}
+                  blockTitle={blockTitle}
+                />
+              </div>
             )}
           </div>
         </ScrollableAnchor>
