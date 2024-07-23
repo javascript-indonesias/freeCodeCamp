@@ -33,7 +33,6 @@ import ChallengeTitle from '../components/challenge-title';
 import CompletionModal from '../components/completion-modal';
 import HelpModal from '../components/help-modal';
 import ShortcutsModal from '../components/shortcuts-modal';
-import Notes from '../components/notes';
 import Output from '../components/output';
 import Preview, { type PreviewProps } from '../components/preview';
 import ProjectPreviewModal from '../components/project-preview-modal';
@@ -177,11 +176,11 @@ const defaultOutput = `
 */`;
 
 function ShowClassic({
-  challengeFiles: reduxChallengeFiles,
+  challengeFiles,
   data: {
     challengeNode: {
       challenge: {
-        challengeFiles,
+        challengeFiles: seedChallengeFiles,
         block,
         title,
         description,
@@ -364,7 +363,7 @@ function ShowClassic({
     });
 
     createFiles(
-      mergeChallengeFiles(challengeFiles, savedChallenge?.challengeFiles)
+      mergeChallengeFiles(seedChallengeFiles, savedChallenge?.challengeFiles)
     );
 
     initTests(tests);
@@ -417,9 +416,9 @@ function ShowClassic({
     isUsingKeyboardInTablist
   }: RenderEditorArgs) => {
     return (
-      reduxChallengeFiles && (
+      challengeFiles && (
         <MultifileEditor
-          challengeFiles={reduxChallengeFiles}
+          challengeFiles={challengeFiles}
           block={block}
           superBlock={superBlock}
           containerRef={containerRef}
@@ -458,12 +457,11 @@ function ShowClassic({
             })}
             guideUrl={getGuideUrl({ forumTopicId, title })}
             hasEditableBoundaries={hasEditableBoundaries}
-            hasNotes={!!notes}
             hasPreview={showPreview}
             instructions={renderInstructionsPanel({
               showToolPanel: false
             })}
-            notes={<Notes notes={notes} />}
+            notes={notes}
             onPreviewResize={onPreviewResize}
             preview={
               <StepPreview
@@ -484,7 +482,7 @@ function ShowClassic({
         )}
         {!isMobile && (
           <DesktopLayout
-            challengeFiles={reduxChallengeFiles}
+            challengeFiles={challengeFiles}
             challengeType={challengeType}
             editor={renderEditor({
               isMobileLayout: false,
@@ -498,7 +496,7 @@ function ShowClassic({
             })}
             isFirstStep={isFirstStep}
             layoutState={layout}
-            notes={<Notes notes={notes} />}
+            notes={notes}
             onPreviewResize={onPreviewResize}
             preview={
               <StepPreview
