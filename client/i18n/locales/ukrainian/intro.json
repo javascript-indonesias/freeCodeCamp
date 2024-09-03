@@ -1858,9 +1858,9 @@
         "intro": []
       },
       "lab-business-card": {
-        "title": "Design a Business Card",
+        "title": "Створіть дизайн візитівки",
         "intro": [
-          "In this lab, you'll create a business card and style it using CSS."
+          "У цій лабораторній роботі ви створите візитівку та стилізуєте її за допомогою CSS."
         ]
       },
       "gnuk": {
@@ -2007,9 +2007,11 @@
         "title": "74",
         "intro": []
       },
-      "wmkc": {
-        "title": "75",
-        "intro": []
+      "lab-confidential-email-page": {
+        "title": "Build a Confidential Email Page",
+        "intro": [
+          "For this lab, you will create a web page of a confidential email using HTML and CSS."
+        ]
       },
       "zter": {
         "title": "76",
@@ -2028,9 +2030,9 @@
         "intro": []
       },
       "lab-page-of-playing-cards": {
-        "title": "Build a Page of Playing Cards",
+        "title": "Створіть сторінку гральних карт",
         "intro": [
-          "For this lab, you will use flexbox to create a webpage of playing cards."
+          "У цій лабораторній роботі ви будете використовувати flexbox, щоб створити вебсторінку з гральними картами."
         ]
       },
       "kqao": {
@@ -2049,9 +2051,11 @@
         "title": "84",
         "intro": []
       },
-      "upuu": {
-        "title": "85",
-        "intro": []
+      "lab-newspaper-article": {
+        "title": "Build a Newspaper Article",
+        "intro": [
+          "In this lab, you will build a newspaper article page using HTML and CSS."
+        ]
       },
       "hbme": {
         "title": "86",
@@ -2151,9 +2155,9 @@
         "title": "109",
         "intro": []
       },
-      "njkq": {
-        "title": "110",
-        "intro": []
+      "lab-availability-table": {
+        "title": "Build an Availability Table",
+        "intro": ["For this lab, you will create an availability table."]
       },
       "sget": {
         "title": "111",
@@ -2200,9 +2204,9 @@
         "intro": []
       },
       "lab-moon-orbit": {
-        "title": "Build a Moon Orbit",
+        "title": "Побудуйте орбіту Місяця",
         "intro": [
-          "For this lab, you will create an animation of the moon orbiting the earth."
+          "У цій лабораторній роботі ви створите анімацію оберту Місяця навколо Землі."
         ]
       },
       "lugl": {
@@ -2327,9 +2331,11 @@
         "title": "151",
         "intro": []
       },
-      "icxa": {
-        "title": "152",
-        "intro": []
+      "workshop-calculator": {
+        "title": "Build a Calculator",
+        "intro": [
+          "In this workshop, you will review working with functions by building a calculator."
+        ]
       },
       "hqba": {
         "title": "153",
@@ -2359,9 +2365,12 @@
         "title": "159",
         "intro": []
       },
-      "qmdt": {
-        "title": "160",
-        "intro": []
+      "workshop-shopping-list": {
+        "title": "Build a Shopping List",
+        "intro": [
+          "In this workshop, you will practice working with arrays by building a shopping list.",
+          "You will review how to add and remove elements from an array using methods like <code>push</code>, <code>pop</code>, <code>shift</code>, and <code>unshift</code>."
+        ]
       },
       "mokm": {
         "title": "161",
@@ -2387,9 +2396,9 @@
         "title": "166",
         "intro": []
       },
-      "vabq": {
-        "title": "167",
-        "intro": []
+      "lab-factorial-calculator": {
+        "title": "Build a Factorial Calculator ",
+        "intro": ["In this lab, you will build a factorial calculator."]
       },
       "lgfm": {
         "title": "168",
@@ -2715,9 +2724,9 @@
         "title": "248",
         "intro": []
       },
-      "mouu": {
-        "title": "249",
-        "intro": []
+      "lab-cash-register": {
+        "title": "Build a Cash Register",
+        "intro": ["For this lab, you will build a cash register."]
       },
       "xayi": {
         "title": "250",

@@ -1814,7 +1814,12 @@
       "nxbr": { "title": "72", "intro": [] },
       "qzcx": { "title": "73", "intro": [] },
       "wozq": { "title": "74", "intro": [] },
-      "wmkc": { "title": "75", "intro": [] },
+      "lab-confidential-email-page": {
+        "title": "Build a Confidential Email Page",
+        "intro": [
+          "For this lab, you will create a web page of a confidential email using HTML and CSS."
+        ]
+      },
       "zter": { "title": "76", "intro": [] },
       "rfiq": { "title": "77", "intro": [] },
       "tcwi": { "title": "78", "intro": [] },
@@ -1829,7 +1834,12 @@
       "habq": { "title": "82", "intro": [] },
       "vqut": { "title": "83", "intro": [] },
       "ujcf": { "title": "84", "intro": [] },
-      "upuu": { "title": "85", "intro": [] },
+      "lab-newspaper-article": {
+        "title": "Build a Newspaper Article",
+        "intro": [
+          "In this lab, you will build a newspaper article page using HTML and CSS."
+        ]
+      },
       "hbme": { "title": "86", "intro": [] },
       "ioby": { "title": "87", "intro": [] },
       "dyvj": { "title": "88", "intro": [] },
@@ -1919,7 +1929,12 @@
       "wjzt": { "title": "149", "intro": [] },
       "tsdq": { "title": "150", "intro": [] },
       "kkix": { "title": "151", "intro": [] },
-      "icxa": { "title": "152", "intro": [] },
+      "workshop-calculator": {
+        "title": "Build a Calculator",
+        "intro": [
+          "In this workshop, you will review working with functions by building a calculator."
+        ]
+      },
       "hqba": { "title": "153", "intro": [] },
       "nnqa": { "title": "154", "intro": [] },
       "cktz": { "title": "155", "intro": [] },
@@ -1940,7 +1955,10 @@
       "dvnt": { "title": "164", "intro": [] },
       "ekdb": { "title": "165", "intro": [] },
       "ezek": { "title": "166", "intro": [] },
-      "vabq": { "title": "167", "intro": [] },
+      "lab-factorial-calculator": {
+        "title": "Build a Factorial Calculator ",
+        "intro": ["In this lab, you will build a factorial calculator."]
+      },
       "lgfm": { "title": "168", "intro": [] },
       "kgtw": { "title": "169", "intro": [] },
       "ljmq": { "title": "170", "intro": [] },
@@ -2029,7 +2047,10 @@
       "lofk": { "title": "246", "intro": [] },
       "udia": { "title": "247", "intro": [] },
       "wevl": { "title": "248", "intro": [] },
-      "mouu": { "title": "249", "intro": [] },
+      "lab-cash-register": {
+        "title": "Build a Cash Register",
+        "intro": ["For this lab, you will build a cash register."]
+      },
       "xayi": { "title": "250", "intro": [] },
       "mjbe": { "title": "251", "intro": [] },
       "byqx": { "title": "252", "intro": [] },

@@ -1868,9 +1868,9 @@
         "intro": []
       },
       "lab-business-card": {
-        "title": "Design a Business Card",
+        "title": "Crie um cartão de visita",
         "intro": [
-          "In this lab, you'll create a business card and style it using CSS."
+          "Neste laboratório, você vai criar um cartão de visita e estilizá-lo usando CSS."
         ]
       },
       "gnuk": {
@@ -2017,9 +2017,11 @@
         "title": "74",
         "intro": []
       },
-      "wmkc": {
-        "title": "75",
-        "intro": []
+      "lab-confidential-email-page": {
+        "title": "Crie uma página de e-mail confidencial",
+        "intro": [
+          "Para este laboratório, você criará uma página da web de um e-mail confidencial usando HTML e CSS."
+        ]
       },
       "zter": {
         "title": "76",
@@ -2038,9 +2040,9 @@
         "intro": []
       },
       "lab-page-of-playing-cards": {
-        "title": "Build a Page of Playing Cards",
+        "title": "Construa uma página de jogos de cartas",
         "intro": [
-          "For this lab, you will use flexbox to create a webpage of playing cards."
+          "Para este laboratório, você usará o Flexbox para criar uma página da web de jogos de cartas."
         ]
       },
       "kqao": {
@@ -2059,9 +2061,11 @@
         "title": "84",
         "intro": []
       },
-      "upuu": {
-        "title": "85",
-        "intro": []
+      "lab-newspaper-article": {
+        "title": "Crie um artigo de jornal",
+        "intro": [
+          "Neste laboratório, você criará uma página de artigo de jornal usando HTML e CSS."
+        ]
       },
       "hbme": {
         "title": "86",
@@ -2161,9 +2165,11 @@
         "title": "109",
         "intro": []
       },
-      "njkq": {
-        "title": "110",
-        "intro": []
+      "lab-availability-table": {
+        "title": "Crie uma tabela de disponibilidade",
+        "intro": [
+          "Neste laboratório, você criará uma tabela de disponibilidade."
+        ]
       },
       "sget": {
         "title": "111",
@@ -2210,9 +2216,9 @@
         "intro": []
       },
       "lab-moon-orbit": {
-        "title": "Build a Moon Orbit",
+        "title": "Crie uma órbita lunar",
         "intro": [
-          "For this lab, you will create an animation of the moon orbiting the earth."
+          "Para esse laboratório, você criará uma animação da lua orbitando a Terra."
         ]
       },
       "lugl": {
@@ -2337,9 +2343,11 @@
         "title": "151",
         "intro": []
       },
-      "icxa": {
-        "title": "152",
-        "intro": []
+      "workshop-calculator": {
+        "title": "Build a Calculator",
+        "intro": [
+          "In this workshop, you will review working with functions by building a calculator."
+        ]
       },
       "hqba": {
         "title": "153",
@@ -2369,9 +2377,12 @@
         "title": "159",
         "intro": []
       },
-      "qmdt": {
-        "title": "160",
-        "intro": []
+      "workshop-shopping-list": {
+        "title": "Crie uma lista de compras",
+        "intro": [
+          "Neste workshop, você vai praticar o uso de arrays criando uma lista de compras.",
+          "Você lembrará de como adicionar e remover elementos de um array usando métodos como <code>push</code>, <code>pop</code>, <code>shift</code> e <code>unshift</code>."
+        ]
       },
       "mokm": {
         "title": "161",
@@ -2397,9 +2408,9 @@
         "title": "166",
         "intro": []
       },
-      "vabq": {
-        "title": "167",
-        "intro": []
+      "lab-factorial-calculator": {
+        "title": "Build a Factorial Calculator ",
+        "intro": ["In this lab, you will build a factorial calculator."]
       },
       "lgfm": {
         "title": "168",
@@ -2725,9 +2736,9 @@
         "title": "248",
         "intro": []
       },
-      "mouu": {
-        "title": "249",
-        "intro": []
+      "lab-cash-register": {
+        "title": "Build a Cash Register",
+        "intro": ["For this lab, you will build a cash register."]
       },
       "xayi": {
         "title": "250",
