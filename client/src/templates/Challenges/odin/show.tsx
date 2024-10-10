@@ -23,6 +23,7 @@ import HelpModal from '../components/help-modal';
 import Scene from '../components/scene/scene';
 import PrismFormatted from '../components/prism-formatted';
 import ChallengeTitle from '../components/challenge-title';
+import ChallegeExplanation from '../components/challenge-explanation';
 import MultipleChoiceQuestions from '../components/multiple-choice-questions';
 import Assignments from '../components/assignments';
 import {
@@ -62,7 +63,6 @@ const mapDispatchToProps = (dispatch: Dispatch) =>
 interface ShowOdinProps {
   challengeMounted: (arg0: string) => void;
   data: { challengeNode: ChallengeNode };
-  description: string;
   initTests: (xs: Test[]) => void;
   isChallengeCompleted: boolean;
   openCompletionModal: () => void;
@@ -230,13 +230,15 @@ class ShowOdin extends Component<ShowOdinProps, ShowOdinState> {
           challenge: {
             title,
             description,
+            instructions,
+            explanation,
             superBlock,
             block,
             videoId,
             videoLocaleIds,
             bilibiliIds,
             fields: { blockName },
-            question,
+            questions,
             assignments,
             translationPending,
             scene
@@ -252,11 +254,12 @@ class ShowOdin extends Component<ShowOdinProps, ShowOdinState> {
       isChallengeCompleted
     } = this.props;
 
+    const question = questions[0];
+    const { solution } = question;
+
     const blockNameTitle = `${t(
       `intro:${superBlock}.blocks.${block}.title`
     )} - ${title}`;
-
-    const { solution } = question;
 
     return (
       <Hotkeys
@@ -309,6 +312,13 @@ class ShowOdin extends Component<ShowOdinProps, ShowOdinState> {
               )}
 
               <Col md={8} mdOffset={2} sm={10} smOffset={1} xs={12}>
+                {instructions && (
+                  <PrismFormatted
+                    className={'line-numbers'}
+                    text={instructions}
+                  />
+                )}
+
                 <ObserveKeys>
                   {assignments.length > 0 && (
                     <Assignments
@@ -327,7 +337,13 @@ class ShowOdin extends Component<ShowOdinProps, ShowOdinState> {
                     handleOptionChange={this.handleOptionChange}
                   />
                 </ObserveKeys>
-                <Spacer size='medium' />
+
+                {explanation ? (
+                  <ChallegeExplanation explanation={explanation} />
+                ) : (
+                  <Spacer size='medium' />
+                )}
+
                 <Button
                   block={true}
                   size='medium'
@@ -388,6 +404,8 @@ export const query = graphql`
         }
         title
         description
+        instructions
+        explanation
         challengeType
         helpCategory
         superBlock
@@ -400,7 +418,7 @@ export const query = graphql`
             testString
           }
         }
-        question {
+        questions {
           text
           answers {
             answer
