@@ -1724,12 +1724,18 @@
           "For this lab, you will create a web page of a travel agency."
         ]
       },
-      "vipr": { "title": "6", "intro": [] },
+      "lecture-working-with-media": {
+        "title": "Working with Media",
+        "intro": ["Learn about using media in HTML with these lecture videos."]
+      },
       "lab-video-compilation-page": {
         "title": "Build a Video Compilation Page",
         "intro": ["For this lab, you will create a video compilation web page."]
       },
-      "bzfv": { "title": "8", "intro": [] },
+      "lecture-working-with-links": {
+        "title": "Working with Links",
+        "intro": ["Learn about using links in HTML with these lecture videos."]
+      },
       "review-basic-html": {
         "title": "Basic HTML Review",
         "intro": ["Review the basic HTML topics."]
@@ -1905,7 +1911,13 @@
           "Test what you've learned in this quiz of using colors in CSS."
         ]
       },
-      "jnqt": { "title": "68", "intro": [] },
+      "workshop-registration-form": {
+        "title": "Design a Registration Form",
+        "intro": [
+          "You can use HTML forms to collect information from people who visit your webpage.",
+          "In this workshop, you'll learn how to design HTML forms by designing a signup page. You'll learn how to control what types of data people can type into your form, and some new CSS tools for styling your page."
+        ]
+      },
       "vkei": { "title": "69", "intro": [] },
       "lab-contact-form": {
         "title": "Design a Contact Form",
@@ -1941,7 +1953,13 @@
           "Test what you've learned in this quiz of the box model, transforms, filters, and overflow in CSS."
         ]
       },
-      "tcwi": { "title": "78", "intro": [] },
+      "workshop-flexbox-photo-gallery": {
+        "title": "Build a Flexbox Photo Gallery",
+        "intro": [
+          "Flexbox helps you design your webpage so that it looks good on any screen size.",
+          "In this workshop, you'll use Flexbox to build a responsive photo gallery webpage."
+        ]
+      },
       "uptf": { "title": "79", "intro": [] },
       "lab-page-of-playing-cards": {
         "title": "Build a Page of Playing Cards",
@@ -1990,7 +2008,13 @@
           "Test what you've learned in this quiz of making your webpage accessible with CSS."
         ]
       },
-      "swpl": { "title": "93", "intro": [] },
+      "workshop-balance-sheet": {
+        "title": "Build a Balance Sheet",
+        "intro": [
+          "You can use CSS pseudo selectors to change specific HTML elements.",
+          "In this workshop, you'll build a balance sheet using pseudo selectors. You'll learn how to change the style of an element when you hover over it with your mouse, and trigger other events on your webpage."
+        ]
+      },
       "hcje": { "title": "94", "intro": [] },
       "lab-book-inventory-app": {
         "title": "Build a Book Inventory App",
@@ -2072,11 +2096,17 @@
         "intro": ["Test what you've learned in this quiz of using grid in CSS."]
       },
       "dorc": { "title": "120", "intro": [] },
-      "adzu": { "title": "121", "intro": [] },
       "lab-moon-orbit": {
         "title": "Build a Moon Orbit",
         "intro": [
           "For this lab, you will create an animation of the moon orbiting the earth."
+        ]
+      },
+      "workshop-flappy-penguin": {
+        "title": "Build a Flappy Penguin",
+        "intro": [
+          "You can transform HTML elements to create appealing designs that draw your reader's eye. You can use transforms to rotate elements, scale them, and more.",
+          "In this workshop, you'll build a penguin. You'll use CSS transforms to position and resize the parts of your penguin, create a background, and animate your work."
         ]
       },
       "lugl": { "title": "123", "intro": [] },
