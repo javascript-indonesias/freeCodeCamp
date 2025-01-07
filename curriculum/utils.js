@@ -1,6 +1,6 @@
 const path = require('path');
 const {
-  createFlatSuperBlockMap,
+  generateSuperBlockList,
   SuperBlocks
 } = require('../shared/config/curriculum');
 
@@ -42,7 +42,7 @@ function createSuperOrder(superBlocks) {
   return superOrder;
 }
 
-const flatSuperBlockMap = createFlatSuperBlockMap({
+const flatSuperBlockMap = generateSuperBlockList({
   showNewCurriculum: process.env.SHOW_NEW_CURRICULUM === 'true',
   showUpcomingChanges: process.env.SHOW_UPCOMING_CHANGES === 'true'
 });
@@ -81,7 +81,6 @@ const directoryToSuperblock = {
   '18-project-euler': 'project-euler',
   '19-foundational-c-sharp-with-microsoft':
     'foundational-c-sharp-with-microsoft',
-  '20-upcoming-python': 'upcoming-python',
   '21-a2-english-for-developers': 'a2-english-for-developers',
   '22-rosetta-code': 'rosetta-code',
   '23-python-for-everybody': 'python-for-everybody',

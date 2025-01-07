@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, ReactNode } from 'react';
 import type { DefaultTFuncReturn, TFunction } from 'i18next';
 import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
@@ -7,6 +7,7 @@ import { bindActionCreators, Dispatch } from 'redux';
 import { createSelector } from 'reselect';
 import { Spacer } from '@freecodecamp/ui';
 
+import { challengeTypes } from '../../../../../shared/config/challenge-types';
 import { SuperBlocks } from '../../../../../shared/config/curriculum';
 import envData from '../../../../config/env.json';
 import { isAuditedSuperBlock } from '../../../../../shared/utils/is-audited';
@@ -26,7 +27,7 @@ import BlockHeader from './block-header';
 
 import '../intro.css';
 
-const { curriculumLocale, showUpcomingChanges, showNewCurriculum } = envData;
+const { curriculumLocale } = envData;
 
 type Challenge = ChallengeNode['challenge'];
 
@@ -71,7 +72,7 @@ class Block extends Component<BlockProps> {
     toggleBlock(block);
   };
 
-  render(): JSX.Element {
+  render(): ReactNode {
     const {
       block,
       blockType,
@@ -83,8 +84,9 @@ class Block extends Component<BlockProps> {
     } = this.props;
 
     let completedCount = 0;
+    let stepNumber = 0;
 
-    const challengesWithCompleted = challenges.map(challenge => {
+    const extendedChallenges = challenges.map(challenge => {
       const { id } = challenge;
       const isCompleted = completedChallengeIds.some(
         (completedChallengeId: string) => completedChallengeId === id
@@ -92,7 +94,13 @@ class Block extends Component<BlockProps> {
       if (isCompleted) {
         completedCount++;
       }
-      return { ...challenge, isCompleted };
+      // Dialogues are interwoven with other challenges in the curriculum, but
+      // are not considered to be steps.
+      if (challenge.challengeType !== challengeTypes.dialogue) {
+        stepNumber++;
+      }
+
+      return { ...challenge, isCompleted, stepNumber };
     });
 
     const isProjectBlock = challenges.some(challenge => {
@@ -103,10 +111,7 @@ class Block extends Component<BlockProps> {
       return isGridBased(superBlock, challenge.challengeType);
     });
 
-    const isAudited = isAuditedSuperBlock(curriculumLocale, superBlock, {
-      showNewCurriculum,
-      showUpcomingChanges
-    });
+    const isAudited = isAuditedSuperBlock(curriculumLocale, superBlock);
 
     const blockTitle = t(`intro:${superBlock}.blocks.${block}.title`);
     // the real type of TFunction is the type below, because intro can be an array of strings
@@ -118,17 +123,24 @@ class Block extends Component<BlockProps> {
     const expandText = t('intro:misc-text.expand');
     const collapseText = t('intro:misc-text.collapse');
 
-    const isBlockCompleted = completedCount === challengesWithCompleted.length;
+    const isBlockCompleted = completedCount === extendedChallenges.length;
 
     const percentageCompleted = Math.floor(
-      (completedCount / challengesWithCompleted.length) * 100
+      (completedCount / extendedChallenges.length) * 100
     );
+
+    // since the Blocks are not components, we need link to exist even if it's
+    // not being used to render anything
+    const link = challenges[0]?.fields.slug || '';
+    const blockLayout = challenges[0]?.blockLayout;
+
+    const isEmptyBlock = !challenges.length;
 
     const courseCompletionStatus = () => {
       if (completedCount === 0) {
         return t('learn.not-started');
       }
-      if (completedCount === challengesWithCompleted.length) {
+      if (completedCount === extendedChallenges.length) {
         return t('learn.completed');
       }
       return `${percentageCompleted}% ${t('learn.completed')}`;
@@ -174,19 +186,19 @@ class Block extends Component<BlockProps> {
               <span
                 aria-hidden='true'
                 className='map-completed-count'
-              >{`${completedCount}/${challengesWithCompleted.length}`}</span>
+              >{`${completedCount}/${extendedChallenges.length}`}</span>
               <span className='sr-only'>
                 ,{' '}
                 {t('learn.challenges-completed', {
                   completedCount,
-                  totalChallenges: challengesWithCompleted.length
+                  totalChallenges: extendedChallenges.length
                 })}
               </span>
             </div>
           </button>
           {isExpanded && (
             <Challenges
-              challengesWithCompleted={challengesWithCompleted}
+              challenges={extendedChallenges}
               isProjectBlock={isProjectBlock}
             />
           )}
@@ -218,7 +230,7 @@ class Block extends Component<BlockProps> {
           </div>
           <BlockIntros intros={blockIntroArr} />
           <Challenges
-            challengesWithCompleted={challengesWithCompleted}
+            challenges={extendedChallenges}
             isProjectBlock={isProjectBlock}
           />
         </div>
@@ -258,7 +270,7 @@ class Block extends Component<BlockProps> {
             <div id={`${block}-panel`}>
               <BlockIntros intros={blockIntroArr} />
               <Challenges
-                challengesWithCompleted={challengesWithCompleted}
+                challenges={extendedChallenges}
                 isProjectBlock={isProjectBlock}
                 isGridMap={true}
                 blockTitle={blockTitle}
@@ -301,12 +313,14 @@ class Block extends Component<BlockProps> {
                 onClick={() => {
                   this.handleBlockClick();
                 }}
-                to={challengesWithCompleted[0].fields.slug}
+                to={link}
               >
                 <CheckMark isCompleted={isBlockCompleted} />
                 {blockTitle}{' '}
                 <span className='sr-only'>
-                  {t('misc.certification-project')}
+                  {isBlockCompleted
+                    ? `${t('misc.certification-project')}, ${t('learn.completed')}`
+                    : `${t('misc.certification-project')}, ${t('learn.not-completed')}`}
                 </span>
               </Link>
             </h3>
@@ -322,7 +336,10 @@ class Block extends Component<BlockProps> {
      * so we can play with it without affecting the existing block layouts.
      */
     const ChallengeListBlock = (
-      <ScrollableAnchor id={block}>
+      <>
+        <ScrollableAnchor id={block}>
+          <span className='hide-scrollable-anchor'></span>
+        </ScrollableAnchor>
         <div
           className={`block block-grid challenge-list-block ${isExpanded ? 'open' : ''}`}
         >
@@ -351,13 +368,13 @@ class Block extends Component<BlockProps> {
           {isExpanded && (
             <div id={`${block}-panel`}>
               <Challenges
-                challengesWithCompleted={challengesWithCompleted}
+                challenges={extendedChallenges}
                 isProjectBlock={isProjectBlock}
               />
             </div>
           )}
         </div>
-      </ScrollableAnchor>
+      </>
     );
 
     /**
@@ -367,7 +384,10 @@ class Block extends Component<BlockProps> {
      * so we can play with it without affecting the existing block layouts.
      */
     const LinkBlock = (
-      <ScrollableAnchor id={block}>
+      <>
+        <ScrollableAnchor id={block}>
+          <span className='hide-scrollable-anchor'></span>
+        </ScrollableAnchor>
         <div className='block block-grid grid-project-block grid-project-block-no-margin'>
           <div className='tags-wrapper'>
             {!isAudited && (
@@ -386,17 +406,22 @@ class Block extends Component<BlockProps> {
                 onClick={() => {
                   this.handleBlockClick();
                 }}
-                to={challengesWithCompleted[0].fields.slug}
+                to={link}
               >
                 <CheckMark isCompleted={isBlockCompleted} />
                 {blockType && <BlockLabel blockType={blockType} />}
                 {blockTitle}
+                <span className='sr-only'>
+                  {isBlockCompleted
+                    ? `, ${t('learn.completed')}`
+                    : `, ${t('learn.not-completed')}`}
+                </span>
               </Link>
             </h3>
           </div>
           <BlockIntros intros={blockIntroArr} />
         </div>
-      </ScrollableAnchor>
+      </>
     );
 
     /**
@@ -404,7 +429,10 @@ class Block extends Component<BlockProps> {
      * This layout is specifically used for the new Full Stack Developer Certification.
      */
     const ChallengeGridBlock = (
-      <ScrollableAnchor id={block}>
+      <>
+        <ScrollableAnchor id={block}>
+          <span className='hide-scrollable-anchor'></span>
+        </ScrollableAnchor>
         <div
           className={`block block-grid challenge-grid-block ${isExpanded ? 'open' : ''}`}
         >
@@ -433,7 +461,7 @@ class Block extends Component<BlockProps> {
           {isExpanded && (
             <div id={`${block}-panel`} className='challenge-grid-block-panel'>
               <Challenges
-                challengesWithCompleted={challengesWithCompleted}
+                challenges={extendedChallenges}
                 isProjectBlock={isProjectBlock}
                 isGridMap={true}
                 blockTitle={blockTitle}
@@ -441,7 +469,7 @@ class Block extends Component<BlockProps> {
             </div>
           )}
         </div>
-      </ScrollableAnchor>
+      </>
     );
 
     const layoutToComponent = {
@@ -455,10 +483,15 @@ class Block extends Component<BlockProps> {
     };
 
     return (
-      <>
-        {layoutToComponent[challenges[0].blockLayout]}
-        {(!isGridBlock || isProjectBlock) && <Spacer size='m' />}
-      </>
+      !isEmptyBlock && (
+        <>
+          {layoutToComponent[blockLayout]}
+          {(!isGridBlock || isProjectBlock) &&
+            superBlock !== SuperBlocks.FullStackDeveloper && (
+              <Spacer size='m' />
+            )}
+        </>
+      )
     );
   }
 }

@@ -1,8 +1,8 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { Alert, Spacer } from '@freecodecamp/ui';
 import { SuperBlocks } from '../../../../../shared/config/curriculum';
-import { SuperBlockIcon } from '../../../assets/icons/superblock-icon';
+import { SuperBlockIcon } from '../../../assets/superblock-icon';
 import { Link } from '../../../components/helpers';
 
 interface SuperBlockIntroProps {
@@ -18,12 +18,12 @@ export const ConditionalDonationAlert = ({
 }: SuperBlockIntroProps): JSX.Element => {
   const { t } = useTranslation();
 
-  const betaCertifications = [
-    SuperBlocks.JsAlgoDataStructNew,
+  const betaCertifications: SuperBlocks[] = [];
+
+  const unfinishedCertifications = [
     SuperBlocks.A2English,
-    SuperBlocks.UpcomingPython,
-    SuperBlocks.FrontEndDevelopment,
-    SuperBlocks.SciCompPy
+    SuperBlocks.B1English,
+    SuperBlocks.FullStackDeveloper
   ];
 
   if (!isDonating && betaCertifications.includes(superBlock))
@@ -44,6 +44,22 @@ export const ConditionalDonationAlert = ({
         </p>
       </Alert>
     );
+
+  if (!isDonating && unfinishedCertifications.includes(superBlock))
+    return (
+      <Alert variant='info' className='annual-donation-alert'>
+        <p>{t('donate.unfinished-certification-2')}</p>
+        <hr />
+        <p>
+          <Trans i18nKey='donate.consider-donating-2'>
+            <Link className='inline' to='/donate'>
+              placeholder
+            </Link>
+          </Trans>
+        </p>
+      </Alert>
+    );
+
   return <></>;
 };
 
