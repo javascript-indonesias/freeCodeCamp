@@ -35,10 +35,11 @@ const plugin: FastifyPluginCallback<{ provider: MailProvider }> = (
       )
     );
 
-  fastify.decorate(
-    'sendEmail',
-    async (args: SendEmailArgs) => await provider.send(args)
-  );
+  fastify.decorate('sendEmail', async (args: SendEmailArgs) => {
+    const logger = fastify.log.child({ args });
+    logger.info('Sending Email');
+    return await provider.send(args);
+  });
 
   done();
 };

@@ -3,7 +3,9 @@ import { challengeTypes } from '../../../../../shared/config/challenge-types';
 import {
   completedChallengesSelector,
   allChallengesInfoSelector,
-  isSignedInSelector
+  isSignedInSelector,
+  completionStateSelector,
+  completedChallengesIdsSelector
 } from '../../../redux/selectors';
 import {
   getCurrentBlockIds,
@@ -14,12 +16,9 @@ import { ns } from './action-types';
 
 export const challengeFilesSelector = state => state[ns].challengeFiles;
 export const challengeMetaSelector = state => state[ns].challengeMeta;
+export const challengeHooksSelector = state => state[ns].challengeHooks;
 export const challengeTestsSelector = state => state[ns].challengeTests;
 export const consoleOutputSelector = state => state[ns].consoleOut;
-export const completedChallengesIdsSelector = createSelector(
-  completedChallengesSelector,
-  completedChallenges => completedChallenges.map(node => node.id)
-);
 export const isChallengeCompletedSelector = createSelector(
   [completedChallengesIdsSelector, challengeMetaSelector],
   (ids, meta) => ids.includes(meta.id)
@@ -60,15 +59,7 @@ export const userCompletedExamSelector = state => state[ns].userCompletedExam;
 export const challengeDataSelector = state => {
   const { challengeType } = challengeMetaSelector(state);
   let challengeData = { challengeType };
-  if (
-    challengeType === challengeTypes.js ||
-    challengeType === challengeTypes.jsProject
-  ) {
-    challengeData = {
-      ...challengeData,
-      challengeFiles: challengeFilesSelector(state)
-    };
-  } else if (challengeType === challengeTypes.backend) {
+  if (challengeType === challengeTypes.backend) {
     const { solution: url = {} } = projectFormValuesSelector(state);
     challengeData = {
       ...challengeData,
@@ -96,7 +87,11 @@ export const challengeDataSelector = state => {
     challengeType === challengeTypes.multifileCertProject ||
     challengeType === challengeTypes.multifilePythonCertProject ||
     challengeType === challengeTypes.python ||
-    challengeType === challengeTypes.lab
+    challengeType === challengeTypes.lab ||
+    challengeType === challengeTypes.js ||
+    challengeType === challengeTypes.jsProject ||
+    challengeType === challengeTypes.jsLab ||
+    challengeType === challengeTypes.pyLab
   ) {
     const { required = [], template = '' } = challengeMetaSelector(state);
     challengeData = {
@@ -154,6 +149,27 @@ export const isBlockNewlyCompletedSelector = state => {
   const completedChallengesIds = completedChallengesIdsSelector(state);
   const { id } = challengeMetaSelector(state);
   return completedPercentage === 100 && !completedChallengesIds.includes(id);
+};
+
+export const isModuleNewlyCompletedSelector = state => {
+  const isBlockNewlyCompleted = isBlockNewlyCompletedSelector(state);
+  const { chapter, module, block } = challengeMetaSelector(state);
+
+  if (!isBlockNewlyCompleted || !chapter || !module) return;
+
+  const completionState = completionStateSelector(state);
+
+  const incompleteBlocksInModule = completionState
+    .find(({ name }) => name === chapter)
+    ?.modules.find(({ name }) => name === module)
+    ?.blocks.filter(({ isCompleted }) => !isCompleted);
+
+  // The module is completed if the newly completed block
+  // is the last block that has `isCompleted === false`.
+  return (
+    incompleteBlocksInModule?.length === 1 &&
+    incompleteBlocksInModule.some(({ name }) => name === block)
+  );
 };
 
 export const attemptsSelector = state => state[ns].attempts;

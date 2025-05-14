@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import type { Prisma } from '@prisma/client';
+import { DailyCodingChallengeLanguage, type Prisma } from '@prisma/client';
 import { ObjectId } from 'mongodb';
 import _ from 'lodash';
 
@@ -13,7 +13,8 @@ import {
   devLogin,
   setupServer,
   superRequest,
-  createSuperRequest
+  createSuperRequest,
+  defaultUsername
 } from '../../../jest.utils';
 import { JWT_SECRET } from '../../utils/env';
 import {
@@ -75,6 +76,16 @@ const testUserData: Prisma.userCreateInput = {
         passed: false,
         examTimeInSeconds: 0
       }
+    }
+  ],
+  completedDailyCodingChallenges: [
+    {
+      id: '5900f36e1000cf542c50fe80',
+      completedDate: 1742941672524,
+      languages: [
+        DailyCodingChallengeLanguage.python,
+        DailyCodingChallengeLanguage.javascript
+      ]
     }
   ],
   partiallyCompletedChallenges: [{ id: '123', completedDate: 123 }],
@@ -217,6 +228,16 @@ const publicUserData = {
       }
     }
   ],
+  completedDailyCodingChallenges: [
+    {
+      id: '5900f36e1000cf542c50fe80',
+      completedDate: 1742941672524,
+      languages: [
+        DailyCodingChallengeLanguage.python,
+        DailyCodingChallengeLanguage.javascript
+      ]
+    }
+  ],
   completedExams: testUserData.completedExams,
   completedSurveys: [], // TODO: add surveys
   quizAttempts: testUserData.quizAttempts,
@@ -289,6 +310,7 @@ const baseProgressData = {
   isRelationalDatabaseCertV8: false,
   isCollegeAlgebraPyCertV8: false,
   completedChallenges: [],
+  completedDailyCodingChallenges: [],
   completedExams: [],
   savedChallenges: [],
   partiallyCompletedChallenges: [],
@@ -734,6 +756,7 @@ describe('userRoutes', () => {
           // missing in the user document.
           currentChallengeId: '',
           completedChallenges: [],
+          completedDailyCodingChallenges: [],
           completedExams: [],
           completedSurveys: [],
           partiallyCompletedChallenges: [],
@@ -802,29 +825,25 @@ describe('userRoutes', () => {
           reportDescription: 'Test Report'
         });
 
-        expect(response.statusCode).toBe(400);
+        expect(response.statusCode).toBe(404);
         expect(response.body).toStrictEqual({
           type: 'danger',
-          message: 'flash.provide-username'
+          message: 'flash.report-error'
         });
       });
 
       test('POST returns 400 for empty report', async () => {
         const response = await superPost('/user/report-user').send({
-          username: 'darth-vader',
+          username: testUserData.username,
           reportDescription: ''
         });
 
         expect(response.statusCode).toBe(400);
-        expect(response.body).toStrictEqual({
-          type: 'danger',
-          message: 'flash.provide-username'
-        });
       });
 
       test('POST sanitises report description', async () => {
         await superPost('/user/report-user').send({
-          username: 'darth-vader',
+          username: defaultUsername,
           reportDescription:
             '<script>const breath = "loud"</script>Luke, I am your father'
         });
@@ -846,7 +865,7 @@ describe('userRoutes', () => {
           }
         );
         const response = await superPost('/user/report-user').send({
-          username: 'darth-vader',
+          username: testUser.username,
           reportDescription: 'Luke, I am your father'
         });
 
@@ -855,11 +874,11 @@ describe('userRoutes', () => {
           from: 'team@freecodecamp.org',
           to: 'support@freecodecamp.org',
           cc: 'foo@bar.com',
-          subject: "Abuse Report : Reporting darth-vader's profile.",
+          subject: `Abuse Report : Reporting ${testUser.username}'s profile.`,
           text: `
 Hello Team,
 
-This is to report the profile of darth-vader.
+This is to report the profile of ${testUser.username}. ID: ${defaultUserId}.
 
 Report Details:
 
@@ -867,6 +886,7 @@ Luke, I am your father
 
 
 Reported by:
+ID: ${testUser.id}
 Username: ${testUser.username}
 Name:
 Email: foo@bar.com

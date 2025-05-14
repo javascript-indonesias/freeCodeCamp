@@ -2,7 +2,7 @@ FROM node:20-bookworm AS builder
 RUN apt-get update && apt-get install -y jq
 # global installs need root permissions, so have to happen before we switch to
 # the node user
-RUN npm i -g pnpm@9
+RUN npm i -g pnpm@10
 # node images create a non-root user that we can use
 USER node
 WORKDIR /home/node/build
@@ -15,6 +15,8 @@ COPY --chown=node:node curriculum/ curriculum/
 # TODO: AFAIK it's just the intro translations. Those should be folded into the
 # curriculum and then we can remove this.
 COPY --chown=node:node client/ client/
+# TODO: Remove once `@fastify/oauth2` is fixed
+COPY --chown=node:node patches/ patches/
 
 RUN pnpm config set dedupe-peer-dependents false
 # While we want to ignore scripts generally, we do need to generate the prisma
@@ -22,7 +24,7 @@ RUN pnpm config set dedupe-peer-dependents false
 # to have prisma as a prod dependency. The jq tricks are to ensure we're using
 # the right version of prisma.
 RUN pnpm install -F=api -F=curriculum -F tools/scripts/build -F challenge-parser \
-  --frozen-lockfile --ignore-scripts
+--frozen-lockfile --ignore-scripts
 RUN cd api && npx prisma@$(jq -r '.devDependencies.prisma' < package.json) generate
 
 # The api needs to source curriculum.json and build:curriculum relies on the
@@ -38,9 +40,12 @@ RUN apt-get update && apt-get install -y jq
 
 WORKDIR /home/node/build
 COPY --chown=node:node pnpm*.yaml .
+COPY --chown=node:node package.json .
 COPY --chown=node:node api/ api/
 COPY --chown=node:node shared/ shared/
-RUN npm i -g pnpm@9
+# TODO: Remove once `@fastify/oauth2` is fixed
+COPY --chown=node:node patches/ patches/
+RUN npm i -g pnpm@10
 
 # Weirdly this config does not seem necessary for the new api (the same number
 # of deps are installed in both cases), but I'm including it just for
