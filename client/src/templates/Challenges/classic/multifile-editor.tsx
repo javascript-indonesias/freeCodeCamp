@@ -5,7 +5,6 @@ import { createSelector } from 'reselect';
 import { isDonationModalOpenSelector } from '../../../redux/selectors';
 import {
   canFocusEditorSelector,
-  consoleOutputSelector,
   visibleEditorsSelector
 } from '../redux/selectors';
 import { getTargetEditor } from '../utils/get-target-editor';
@@ -18,6 +17,7 @@ export type VisibleEditors = {
   stylescss?: boolean;
   scriptjs?: boolean;
   indexts?: boolean;
+  indextsx?: boolean;
   mainpy?: boolean;
 };
 type MultifileEditorProps = Pick<
@@ -37,6 +37,7 @@ type MultifileEditorProps = Pick<
   | 'description'
   // We use dimensions to trigger a re-render of the editor
   | 'dimensions'
+  | 'showIndependentLowerJaw'
 > & {
   visibleEditors: VisibleEditors;
 };
@@ -44,17 +45,10 @@ type MultifileEditorProps = Pick<
 const mapStateToProps = createSelector(
   visibleEditorsSelector,
   canFocusEditorSelector,
-  consoleOutputSelector,
   isDonationModalOpenSelector,
-  (
-    visibleEditors: VisibleEditors,
-    canFocus: boolean,
-    output: string[],
-    open
-  ) => ({
+  (visibleEditors: VisibleEditors, canFocus: boolean, open) => ({
     visibleEditors,
-    canFocus: open ? false : canFocus,
-    output
+    canFocus: open ? false : canFocus
   })
 );
 
@@ -77,10 +71,12 @@ const MultifileEditor = (props: MultifileEditorProps) => {
       scriptjs,
       indexts,
       indexjsx,
+      indextsx,
       mainpy
     },
     usesMultifileEditor,
-    showProjectPreview
+    showProjectPreview,
+    showIndependentLowerJaw
   } = props;
   // TODO: the tabs mess up the rendering (scroll doesn't work properly and
   // the in-editor description)
@@ -100,6 +96,7 @@ const MultifileEditor = (props: MultifileEditorProps) => {
 
   // The order of the keys should match the order set by sortChallengeFiles
   if (indexjsx) editorKeys.push('indexjsx');
+  if (indextsx) editorKeys.push('indextsx');
   if (indexhtml) editorKeys.push('indexhtml');
   if (stylescss) editorKeys.push('stylescss');
   if (scriptjs) editorKeys.push('scriptjs');
@@ -154,6 +151,7 @@ const MultifileEditor = (props: MultifileEditorProps) => {
                     title={title}
                     usesMultifileEditor={usesMultifileEditor}
                     showProjectPreview={showProjectPreview}
+                    showIndependentLowerJaw={showIndependentLowerJaw}
                   />
                 </ReflexElement>
               );

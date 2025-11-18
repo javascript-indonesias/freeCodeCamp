@@ -1,49 +1,67 @@
 import type { FastifyPluginCallbackTypebox } from '@fastify/type-provider-typebox';
 import { ObjectId } from 'mongodb';
-import _ from 'lodash';
 import { FastifyInstance, FastifyReply } from 'fastify';
 import jwt from 'jsonwebtoken';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library.js';
 
-import * as schemas from '../../schemas';
-import { createResetProperties } from '../../utils/create-user';
-import { customNanoid } from '../../utils/ids';
-import { encodeUserToken } from '../../utils/tokens';
-import { trimTags } from '../../utils/validation';
-import { generateReportEmail } from '../../utils/email-templates';
-import { splitUser } from '../helpers/user-utils';
+import * as schemas from '../../schemas.js';
+import * as examEnvironmentSchemas from '../../exam-environment/schemas/index.js';
+import { createResetProperties } from '../../utils/create-user.js';
+import { customNanoid } from '../../utils/ids.js';
+import { encodeUserToken } from '../../utils/tokens.js';
+import { trimTags } from '../../utils/validation.js';
+import { generateReportEmail } from '../../utils/email-templates.js';
+import { splitUser } from '../helpers/user-utils.js';
 import {
   normalizeChallenges,
   normalizeFlags,
   normalizeProfileUI,
   normalizeSurveys,
   normalizeTwitter,
+  normalizeBluesky,
   removeNulls
-} from '../../utils/normalize';
-import { mapErr, type UpdateReqType } from '../../utils';
+} from '../../utils/normalize.js';
+import { mapErr, type UpdateReqType } from '../../utils/index.js';
 import {
   getCalendar,
   getPoints,
   ProgressTimestamp
-} from '../../utils/progress';
-import { JWT_SECRET } from '../../utils/env';
+} from '../../utils/progress.js';
+import { DEPLOYMENT_ENV, JWT_SECRET } from '../../utils/env.js';
+import {
+  getExamAttemptHandler,
+  getExamAttemptsByExamIdHandler,
+  getExamAttemptsHandler,
+  getExams
+} from '../../exam-environment/routes/exam-environment.js';
+import { ERRORS } from '../../exam-environment/utils/errors.js';
 
 /**
  * Helper function to get the api url from the shared transcript link.
+ * Example msTranscriptUrl: https://learn.microsoft.com/en-us/users/mot01/transcript/8u6awert43q1plo.
  *
  * @param msTranscript Shared transcript link.
  * @returns Microsoft transcript api url.
  */
-export const getMsTranscriptApiUrl = (msTranscript: string) => {
-  // example msTranscriptUrl: https://learn.microsoft.com/en-us/users/mot01/transcript/8u6awert43q1plo
-  const url = new URL(msTranscript);
-
-  // TODO(Post-MVP): throw if it doesn't match?
-  const transcriptUrlRegex = /\/transcript\/([^/]+)\/?/;
-  const id = transcriptUrlRegex.exec(url.pathname)?.[1];
-  return `https://learn.microsoft.com/api/profiles/transcript/share/${
-    id ?? ''
-  }`;
-};
+export function getMsTranscriptApiUrl(msTranscript: string) {
+  try {
+    const url = new URL(msTranscript);
+    const transcriptUrlRegex = /\/transcript\/([^/]+)\/?/;
+    const id = transcriptUrlRegex.exec(url.pathname)?.[1];
+    if (!id) {
+      return { error: `Invalid transcript URL: ${msTranscript}`, data: null };
+    }
+    return {
+      error: null,
+      data: `https://learn.microsoft.com/api/profiles/transcript/share/${id}`
+    };
+  } catch (e) {
+    return {
+      error: `Invalid transcript URL: ${msTranscript}\n${JSON.stringify(e)}`,
+      data: null
+    };
+  }
+}
 
 /**
  * Wrapper for endpoints related to user account management,
@@ -75,12 +93,81 @@ export const userRoutes: FastifyPluginCallbackTypebox = (
       await fastify.prisma.survey.deleteMany({
         where: { userId: req.user!.id }
       });
-      await fastify.prisma.user.delete({
-        where: { id: req.user!.id }
-      });
+      try {
+        await fastify.prisma.user.delete({
+          where: { id: req.user!.id }
+        });
+      } catch (err) {
+        if (
+          err instanceof PrismaClientKnownRequestError &&
+          err.code === 'P2025'
+        ) {
+          logger.warn(
+            err,
+            `User with id ${req.user?.id} not found for deletion.`
+          );
+        } else {
+          logger.error(err, 'Error deleting user account');
+          throw err;
+        }
+      }
       reply.clearOurCookies();
 
       return {};
+    }
+  );
+
+  fastify.delete(
+    '/users/:userId',
+    {
+      schema: schemas.deleteUser
+    },
+    async (req, reply) => {
+      const logger = fastify.log.child({ req, res: reply });
+      const { userId } = req.params;
+
+      if (userId !== req.user?.id) {
+        logger.warn(
+          { requestedUserId: userId, authUserId: req.user?.id },
+          'User attempted to delete an account they do not have authorization to.'
+        );
+        void reply.code(403);
+        return { type: 'error', message: 'forbidden' } as const;
+      }
+
+      logger.info(`User ${req.user.id} requested account deletion`);
+      try {
+        await fastify.prisma.userToken.deleteMany({
+          where: { userId: req.user.id }
+        });
+        await fastify.prisma.msUsername.deleteMany({
+          where: { userId: req.user.id }
+        });
+        await fastify.prisma.survey.deleteMany({
+          where: { userId: req.user.id }
+        });
+        await fastify.prisma.user.delete({
+          where: { id: req.user.id }
+        });
+      } catch (err) {
+        // Whilst this is behind auth, this should never happen
+        if (
+          err instanceof PrismaClientKnownRequestError &&
+          err.code === 'P2025'
+        ) {
+          logger.warn(
+            err,
+            `User with id ${req.user?.id} not found for deletion.`
+          );
+          return reply.code(404).send({ type: 'error', message: 'not found' });
+        } else {
+          logger.error(err, 'Error deleting user account');
+          throw err;
+        }
+      }
+      reply.clearOurCookies();
+
+      return reply.code(204).send();
     }
   );
 
@@ -174,6 +261,16 @@ export const userRoutes: FastifyPluginCallbackTypebox = (
       const user = await fastify.prisma.user.findUniqueOrThrow({
         where: { id: req.user?.id }
       });
+
+      if (!user.email) {
+        logger.warn('User has no email');
+        void reply.code(403);
+        return reply.send({
+          type: 'danger',
+          message: 'flash.report-error'
+        });
+      }
+
       const { username, reportDescription: report } = req.body;
 
       // TODO: `findUnique` once db migration forces unique usernames
@@ -217,11 +314,11 @@ export const userRoutes: FastifyPluginCallbackTypebox = (
         text: generateReportEmail(user, reportedUser, report)
       });
 
-      return {
+      reply.send({
         type: 'info',
         message: 'flash.report-sent',
         variables: { email: user.email }
-      } as const;
+      });
     }
   );
 
@@ -272,16 +369,32 @@ export const userRoutes: FastifyPluginCallbackTypebox = (
     },
     async (req, reply) => {
       const logger = fastify.log.child({ req, res: reply });
-      logger.info(`User ${req.user?.id} requested linking of msUsername`);
+      logger.info(
+        `User ${req.user?.id} requested linking of msUsername "${req.body.msTranscriptUrl}"`
+      );
 
       try {
         const user = await fastify.prisma.user.findUniqueOrThrow({
           where: { id: req.user?.id }
         });
 
-        const msApiRes = await fetch(
-          getMsTranscriptApiUrl(req.body.msTranscriptUrl)
+        const maybeTranscriptUrl = getMsTranscriptApiUrl(
+          req.body.msTranscriptUrl
         );
+
+        if (maybeTranscriptUrl.error !== null) {
+          logger.warn(
+            { error: maybeTranscriptUrl.error },
+            'Unable to parse Microsoft transcript URL'
+          );
+          return reply
+            .status(400)
+            .send({ type: 'error', message: 'flash.ms.transcript.link-err-1' });
+        }
+
+        const transcriptUrl = maybeTranscriptUrl.data;
+
+        const msApiRes = await fetch(transcriptUrl);
 
         if (!msApiRes.ok) {
           logger.warn(
@@ -424,10 +537,47 @@ export const userRoutes: FastifyPluginCallbackTypebox = (
     examEnvironmentTokenHandler
   );
 
+  fastify.get(
+    '/user/exam-environment/token',
+    {
+      schema: schemas.getUserExamEnvironmentToken
+    },
+    getExamEnvironmentToken
+  );
+
+  fastify.get(
+    '/user/exam-environment/exam/attempts',
+    {
+      schema: examEnvironmentSchemas.examEnvironmentGetExamAttempts
+    },
+    getExamAttemptsHandler
+  );
+  fastify.get(
+    '/user/exam-environment/exam/attempt/:attemptId',
+    {
+      schema: examEnvironmentSchemas.examEnvironmentGetExamAttempt
+    },
+    getExamAttemptHandler
+  );
+  fastify.get(
+    '/user/exam-environment/exams/:examId/attempts',
+    {
+      schema: examEnvironmentSchemas.examEnvironmentGetExamAttemptsByExamId
+    },
+    getExamAttemptsByExamIdHandler
+  );
+  fastify.get(
+    '/user/exam-environment/exams',
+    {
+      schema: examEnvironmentSchemas.examEnvironmentExams
+    },
+    getExams
+  );
+
   done();
 };
 
-// eslint-disable-next-line jsdoc/require-param
+// eslint-disable-next-line jsdoc/require-param, jsdoc/require-returns
 /**
  * Generate a new authorization token for the given user, and invalidates any existing tokens.
  *
@@ -444,6 +594,24 @@ async function examEnvironmentTokenHandler(
   if (!userId) {
     throw new Error('Unreachable. User should be authenticated.');
   }
+
+  // In non-production environments, only staff are allowed to generate a token
+  if (
+    DEPLOYMENT_ENV !== 'production' &&
+    (!req.user?.email?.endsWith('@freecodecamp.org') ||
+      !req.user?.emailVerified)
+  ) {
+    logger.info(
+      `User not allowed to generate authorization token on ${DEPLOYMENT_ENV}.`
+    );
+    void reply.code(403);
+    return reply.send(
+      ERRORS.FCC_ERR_EXAM_ENVIRONMENT(
+        `User not allowed to generate authorization token in ${DEPLOYMENT_ENV} environment.`
+      )
+    );
+  }
+
   // Delete (invalidate) any existing tokens for the user.
   await this.prisma.examEnvironmentAuthorizationToken.deleteMany({
     where: {
@@ -515,6 +683,7 @@ export const userGetRoutes: FastifyPluginCallbackTypebox = (
             id: true,
             is2018DataVisCert: true,
             is2018FullStackCert: true,
+            isA2EnglishCert: true,
             isApisMicroservicesCert: true,
             isBackEndCert: true,
             isCheater: true,
@@ -529,12 +698,14 @@ export const userGetRoutes: FastifyPluginCallbackTypebox = (
             isHonest: true,
             isInfosecCertV7: true,
             isInfosecQaCert: true,
+            isJavascriptCertV9: true,
             isJsAlgoDataStructCert: true,
             isJsAlgoDataStructCertV8: true,
             isMachineLearningPyCertV7: true,
             isQaCertV7: true,
             isRelationalDatabaseCertV8: true,
             isRespWebDesignCert: true,
+            isRespWebDesignCertV9: true,
             isSciCompPyCertV7: true,
             keyboardShortcuts: true,
             linkedin: true,
@@ -549,6 +720,7 @@ export const userGetRoutes: FastifyPluginCallbackTypebox = (
             sendQuincyEmail: true,
             theme: true,
             twitter: true,
+            bluesky: true,
             username: true,
             usernameDisplay: true,
             website: true,
@@ -587,12 +759,15 @@ export const userGetRoutes: FastifyPluginCallbackTypebox = (
         const [flags, rest] = splitUser(user);
 
         const {
+          email,
+          emailVerified,
           username,
           usernameDisplay,
           completedChallenges,
           completedDailyCodingChallenges,
           progressTimestamps,
           twitter,
+          bluesky,
           profileUI,
           currentChallengeId,
           location,
@@ -605,7 +780,10 @@ export const userGetRoutes: FastifyPluginCallbackTypebox = (
           user: {
             [username]: {
               ...removeNulls(publicUser),
+              sendQuincyEmail: publicUser.sendQuincyEmail,
               ...normalizeFlags(flags),
+              picture: publicUser.picture ?? '',
+              email: email ?? '',
               currentChallengeId: currentChallengeId ?? '',
               completedChallenges: normalizeChallenges(completedChallenges),
               completedChallengeCount: completedChallenges.length,
@@ -614,19 +792,22 @@ export const userGetRoutes: FastifyPluginCallbackTypebox = (
               calendar: getCalendar(
                 progressTimestamps as ProgressTimestamp[] | null
               ),
+              emailVerified: !!emailVerified,
               // This assertion is necessary until the database is normalized.
               points: getPoints(
                 progressTimestamps as ProgressTimestamp[] | null
               ),
               profileUI: normalizeProfileUI(profileUI),
               // TODO(Post-MVP) remove this and just use emailVerified
-              isEmailVerified: user.emailVerified,
+              isEmailVerified: !!emailVerified,
               joinDate: new ObjectId(user.id).getTimestamp().toISOString(),
               location: location ?? '',
               name: name ?? '',
               theme: theme ?? 'default',
               twitter: normalizeTwitter(twitter),
-              username: usernameDisplay || username,
+              bluesky: normalizeBluesky(bluesky),
+              username,
+              usernameDisplay: usernameDisplay || username,
               userToken: encodedToken,
               completedSurveys: normalizeSurveys(completedSurveys),
               msUsername: msUsername?.msUsername
@@ -645,3 +826,41 @@ export const userGetRoutes: FastifyPluginCallbackTypebox = (
 
   done();
 };
+
+async function getExamEnvironmentToken(
+  this: FastifyInstance,
+  req: UpdateReqType<typeof schemas.getUserExamEnvironmentToken>,
+  reply: FastifyReply
+) {
+  const logger = this.log.child({ req, res: reply });
+  logger.info(`User ${req.user?.id} requested their exam environment token`);
+  const userId = req.user?.id;
+  if (!userId) {
+    throw new Error('Unreachable. User should be authenticated.');
+  }
+
+  const token = await this.prisma.examEnvironmentAuthorizationToken.findUnique({
+    where: {
+      userId,
+      expireAt: {
+        gt: new Date()
+      }
+    }
+  });
+
+  if (!token) {
+    void reply.code(404);
+    return reply.send(
+      ERRORS.FCC_ERR_EXAM_ENVIRONMENT('No valid token found for user.')
+    );
+  }
+
+  const examEnvironmentAuthorizationToken = jwt.sign(
+    { examEnvironmentAuthorizationToken: token.id },
+    JWT_SECRET
+  );
+
+  return reply.send({
+    examEnvironmentAuthorizationToken
+  });
+}

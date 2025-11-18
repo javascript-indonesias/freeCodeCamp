@@ -1,14 +1,25 @@
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterEach,
+  afterAll,
+  vi
+} from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 
-import db from '../../db/prisma';
-import { createUserInput } from '../../utils/create-user';
-import { findOrCreateUser } from './auth-helpers';
+import db from '../../db/prisma.js';
+import { createUserInput } from '../../utils/create-user.js';
+import { checkCanConnectToDb } from '../../../vitest.utils.js';
+import { findOrCreateUser } from './auth-helpers.js';
 
-const captureException = jest.fn();
+const captureException = vi.fn();
 
 async function setupServer() {
   const fastify = Fastify();
   await fastify.register(db);
+  await checkCanConnectToDb(fastify.prisma);
   // @ts-expect-error we're mocking the Sentry plugin
   fastify.Sentry = { captureException };
   return fastify;
@@ -21,25 +32,36 @@ describe('findOrCreateUser', () => {
     fastify = await setupServer();
   });
 
+  afterAll(async () => {
+    await fastify.prisma.$runCommandRaw({ dropDatabase: 1 });
+    await fastify.close();
+  });
+
   afterEach(async () => {
     await fastify.prisma.user.deleteMany({ where: { email } });
     await fastify.close();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('should send a message to Sentry if there are multiple users with the same email', async () => {
-    await fastify.prisma.user.create({ data: createUserInput(email) });
-    await fastify.prisma.user.create({ data: createUserInput(email) });
+  test('should send a message to Sentry if there are multiple users with the same email', async () => {
+    const user1 = await fastify.prisma.user.create({
+      data: createUserInput(email)
+    });
+    const user2 = await fastify.prisma.user.create({
+      data: createUserInput(email)
+    });
+
+    const ids = [user1.id, user2.id];
 
     await findOrCreateUser(fastify, email);
 
     expect(captureException).toHaveBeenCalledTimes(1);
     expect(captureException).toHaveBeenCalledWith(
-      new Error('Multiple user records found for: test@user.com')
+      new Error(`Multiple user records found for: ${ids.join(', ')}`)
     );
   });
 
-  it('should NOT send a message if there is only one user with the email', async () => {
+  test('should NOT send a message if there is only one user with the email', async () => {
     await fastify.prisma.user.create({ data: createUserInput(email) });
 
     await findOrCreateUser(fastify, email);
@@ -47,7 +69,7 @@ describe('findOrCreateUser', () => {
     expect(captureException).not.toHaveBeenCalled();
   });
 
-  it('should NOT send a message if there are no users with the email', async () => {
+  test('should NOT send a message if there are no users with the email', async () => {
     await findOrCreateUser(fastify, email);
 
     expect(captureException).not.toHaveBeenCalled();

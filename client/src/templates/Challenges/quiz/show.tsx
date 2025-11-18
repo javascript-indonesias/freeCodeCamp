@@ -1,4 +1,4 @@
-import { graphql, navigate } from 'gatsby';
+import { graphql } from 'gatsby';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Helmet from 'react-helmet';
 import { ObserveKeys } from 'react-hotkeys';
@@ -19,7 +19,7 @@ import {
 } from '@freecodecamp/ui';
 
 // Local Utilities
-import { shuffleArray } from '../../../../../shared/utils/shuffle-array';
+import { shuffleArray } from '../../../../../shared-dist/utils/shuffle-array';
 import LearnLayout from '../../../components/layouts/learn';
 import { ChallengeNode, ChallengeMeta, Test } from '../../../redux/prop-types';
 import ChallengeDescription from '../components/challenge-description';
@@ -85,18 +85,21 @@ interface ShowQuizProps {
   closeFinishQuizModal: () => void;
 }
 
+const removeParagraphTags = (text: string) => text.replace(/^<p>|<\/p>$/g, '');
+
 const ShowQuiz = ({
   challengeMounted,
   data: {
     challengeNode: {
       challenge: {
-        fields: { tests, blockHashSlug },
+        fields: { blockHashSlug },
         title,
         description,
         challengeType,
         helpCategory,
         superBlock,
         block,
+        tests,
         translationPending,
         quizzes
       }
@@ -126,7 +129,7 @@ const ShowQuiz = ({
 
   const [showUnanswered, setShowUnanswered] = useState(false);
 
-  const [exitConfirmed, setExitConfirmed] = useState(false);
+  const exitConfirmed = useRef(false);
 
   const [exitPathname, setExitPathname] = useState(blockHashSlug);
 
@@ -143,7 +146,12 @@ const ShowQuiz = ({
       const distractors = question.distractors.map((distractor, index) => {
         return {
           label: (
-            <PrismFormatted className='quiz-answer-label' text={distractor} />
+            <PrismFormatted
+              className='quiz-answer-label'
+              text={removeParagraphTags(distractor)}
+              useSpan
+              noAria
+            />
           ),
           value: index + 1
         };
@@ -153,14 +161,21 @@ const ShowQuiz = ({
         label: (
           <PrismFormatted
             className='quiz-answer-label'
-            text={question.answer}
+            text={removeParagraphTags(question.answer)}
+            useSpan
+            noAria
           />
         ),
         value: 4
       };
 
       return {
-        question: <PrismFormatted text={question.text} />,
+        question: (
+          <PrismFormatted
+            className='quiz-question-label'
+            text={question.text}
+          />
+        ),
         answers: shuffleArray([...distractors, answer]),
         correctAnswer: answer.value
       };
@@ -174,6 +189,7 @@ const ShowQuiz = ({
     correctAnswerCount
   } = useQuiz({
     initialQuestions: initialQuizData,
+    showCorrectAnswersOnSuccess: true,
     validationMessages: {
       correct: t('learn.quiz.correct-answer'),
       incorrect: t('learn.quiz.incorrect-answer')
@@ -232,8 +248,8 @@ const ShowQuiz = ({
   };
 
   const handleExitQuizModalBtnClick = () => {
-    setExitConfirmed(true);
-    void navigate(exitPathname);
+    exitConfirmed.current = true;
+    void reachNavigate(exitPathname || '/learn');
     closeExitQuizModal();
   };
 
@@ -252,7 +268,7 @@ const ShowQuiz = ({
       //   - If they don't pass, the Finish Quiz button is disabled, there isn't anything for them to do other than leaving the page
       //   - If they pass, the Submit-and-go button shows up, and campers should be allowed to leave the page
       // - When they have clicked the exit button on the exit modal
-      if (hasSubmitted || exitConfirmed) {
+      if (hasSubmitted || exitConfirmed.current) {
         return;
       }
 
@@ -268,13 +284,7 @@ const ShowQuiz = ({
       void reachNavigate(`${curLocation.pathname}`);
       openExitQuizModal();
     },
-    [
-      curLocation.pathname,
-      hasSubmitted,
-      exitConfirmed,
-      openExitQuizModal,
-      blockHashSlug
-    ]
+    [curLocation.pathname, hasSubmitted, openExitQuizModal, blockHashSlug]
   );
 
   usePageLeave({
@@ -387,12 +397,7 @@ export const query = graphql`
         block
         fields {
           blockHashSlug
-          blockName
           slug
-          tests {
-            text
-            testString
-          }
         }
         quizzes {
           questions {
@@ -400,6 +405,10 @@ export const query = graphql`
             text
             answer
           }
+        }
+        tests {
+          text
+          testString
         }
         translationPending
       }

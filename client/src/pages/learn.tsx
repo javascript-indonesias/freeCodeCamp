@@ -16,6 +16,7 @@ import {
 } from '../redux/selectors';
 
 import callGA from '../analytics/call-ga';
+import { useClaimableCertsNotification } from '../components/helpers/use-claimable-certs-notification';
 
 interface FetchState {
   pending: boolean;
@@ -23,18 +24,18 @@ interface FetchState {
   errored: boolean;
 }
 
-interface User {
+type MaybeUser = {
   name: string;
   username: string;
   completedChallengeCount: number;
   isDonating: boolean;
-}
+} | null;
 
 const mapStateToProps = createSelector(
   userFetchStateSelector,
   isSignedInSelector,
   userSelector,
-  (fetchState: FetchState, isSignedIn: boolean, user: User) => ({
+  (fetchState: FetchState, isSignedIn: boolean, user: MaybeUser) => ({
     fetchState,
     isSignedIn,
     user
@@ -49,29 +50,30 @@ interface LearnPageProps {
   isSignedIn: boolean;
   fetchState: FetchState;
   state: Record<string, unknown>;
-  user: User;
+  user: MaybeUser;
   data: {
     challengeNode: {
       challenge: {
         fields: Slug;
       };
-    };
+    } | null;
   };
 }
+
+const EMPTY_USER = { name: '', completedChallengeCount: 0, isDonating: false };
 
 function LearnPage({
   isSignedIn,
   fetchState: { pending, complete },
-  user: { name = '', completedChallengeCount = 0, isDonating = false },
-  data: {
-    challengeNode: {
-      challenge: {
-        fields: { slug }
-      }
-    }
-  }
+  user,
+  data: { challengeNode }
 }: LearnPageProps) {
+  const { name, completedChallengeCount, isDonating } = user ?? EMPTY_USER;
+
   const { t } = useTranslation();
+  useClaimableCertsNotification();
+
+  const slug = challengeNode?.challenge?.fields?.slug || '';
 
   const onLearnDonationAlertClick = () => {
     callGA({

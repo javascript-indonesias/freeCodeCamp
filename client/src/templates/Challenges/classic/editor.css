@@ -32,10 +32,16 @@ textarea.inputarea {
 }
 
 .breadcrumbs-demo {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  z-index: var(--z-index-breadcrumbs);
   font-size: 16px;
   margin: 0;
   padding: 10px;
   height: var(--breadcrumbs-height);
+  background: var(--secondary-background);
 }
 
 @media screen and (max-height: 300px) {
@@ -58,6 +64,14 @@ textarea.inputarea {
 .editor-upper-jaw code,
 .editor-lower-jaw code {
   white-space: pre-wrap;
+}
+
+.editor-file-name {
+  font-size: 18px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--quaternary-background);
+  padding-left: 11px;
+  overflow: hidden;
 }
 
 .action-row-container,

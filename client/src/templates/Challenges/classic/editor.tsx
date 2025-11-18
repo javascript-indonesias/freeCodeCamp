@@ -1,5 +1,6 @@
 import * as ReactDOMServer from 'react-dom/server';
 import Loadable from '@loadable/component';
+
 // eslint-disable-next-line import/no-duplicates
 import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import type {
@@ -36,7 +37,7 @@ import { editorNotes } from '../../../utils/tone/editor-notes';
 import {
   canSaveToDB,
   challengeTypes
-} from '../../../../../shared/config/challenge-types';
+} from '../../../../../shared-dist/config/challenge-types';
 import {
   executeChallenge,
   saveEditorContent,
@@ -68,9 +69,17 @@ import { getScrollbarWidth } from '../../../utils/scrollbar-width';
 import { isProjectBased } from '../../../utils/curriculum-layout';
 import envConfig from '../../../../config/env.json';
 import LowerJaw from './lower-jaw';
+// Direct from npm, license in react-types-licence
+import reactTypes from './react-types.json';
+
 import './editor.css';
 
 const MonacoEditor = Loadable(() => import('react-monaco-editor'));
+
+const monacoModelFileMap = {
+  tsxFile: 'index.tsx',
+  reactTypes: 'react.d.ts'
+};
 
 export interface EditorProps {
   attempts: number;
@@ -111,8 +120,9 @@ export interface EditorProps {
     contents: string;
     editableRegionBoundaries?: number[];
   }) => void;
-  usesMultifileEditor: boolean;
+  usesMultifileEditor?: boolean;
   isChallengeCompleted: boolean;
+  showIndependentLowerJaw?: boolean;
 }
 
 // TODO: this is grab bag of unrelated properties.  There's no need for them to
@@ -187,6 +197,7 @@ const modeMap = {
   js: 'javascript',
   jsx: 'javascript',
   ts: 'typescript',
+  tsx: 'typescript',
   py: 'python',
   python: 'python'
 };
@@ -239,7 +250,14 @@ const initialData: EditorProperties = {
 
 const Editor = (props: EditorProps): JSX.Element => {
   const { t } = useTranslation();
-  const { editorRef, initTests, resetAttempts, isMobileLayout } = props;
+  const {
+    editorRef,
+    initTests,
+    resetAttempts,
+    isMobileLayout,
+    challengeFiles,
+    fileKey
+  } = props;
   // These refs are used during initialisation of the editor as well as by
   // callbacks.  Since they have to be initialised before editorWillMount and
   // editorDidMount are called, we cannot use useState.  Reason being that will
@@ -275,6 +293,12 @@ const Editor = (props: EditorProps): JSX.Element => {
   const attemptsRef = useRef<number>(0);
   attemptsRef.current = props.attempts;
 
+  const challengeFile = challengeFiles?.find(
+    challengeFile => challengeFile.fileKey === fileKey
+  );
+
+  const ariaEditorName = `${challengeFile?.name}.${challengeFile?.ext}`;
+
   const options: editor.IStandaloneEditorConstructionOptions = {
     fontSize: 18,
     fontFamily: 'Hack-ZeroSlash, monospace',
@@ -286,7 +310,8 @@ const Editor = (props: EditorProps): JSX.Element => {
       highlightActiveIndentation:
         props.challengeType === challengeTypes.python ||
         props.challengeType === challengeTypes.multifilePythonCertProject ||
-        props.challengeType === challengeTypes.pyLab
+        props.challengeType === challengeTypes.pyLab ||
+        props.challengeType === challengeTypes.dailyChallengePy
     },
     minimap: {
       enabled: false
@@ -309,7 +334,8 @@ const Editor = (props: EditorProps): JSX.Element => {
     tabSize:
       props.challengeType !== challengeTypes.python &&
       props.challengeType !== challengeTypes.multifilePythonCertProject &&
-      props.challengeType !== challengeTypes.pyLab
+      props.challengeType !== challengeTypes.pyLab &&
+      props.challengeType !== challengeTypes.dailyChallengePy
         ? 2
         : 4,
     dragAndDrop: true,
@@ -333,21 +359,47 @@ const Editor = (props: EditorProps): JSX.Element => {
   };
 
   const editorWillMount = (monaco: typeof monacoEditor) => {
-    const { challengeFiles, fileKey, usesMultifileEditor } = props;
+    const { usesMultifileEditor = false } = props;
 
     monacoRef.current = monaco;
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      ...monaco.languages.typescript.typescriptDefaults.getCompilerOptions(),
+      jsx: monaco.languages.typescript.JsxEmit.Preserve,
+      allowUmdGlobalAccess: true
+    });
+
     defineMonacoThemes(monaco, { usesMultifileEditor });
     // If a model is not provided, then the editor 'owns' the model it creates
     // and will dispose of that model if it is replaced. Since we intend to
     // swap and reuse models, we have to create our own models to prevent
     // disposal.
 
-    const challengeFile = challengeFiles?.find(
-      challengeFile => challengeFile.fileKey === fileKey
-    );
+    const setupTSModels = (monaco: typeof monacoEditor) => {
+      const reactFile = monaco.Uri.file(monacoModelFileMap.reactTypes);
+      monaco.editor.createModel(
+        reactTypes['react-18'],
+        'typescript',
+        reactFile
+      );
+
+      const file = monaco.Uri.file(monacoModelFileMap.tsxFile);
+      return monaco.editor.createModel('', 'typescript', file);
+    };
+
+    // TODO: make sure these aren't getting created over and over
+    function createModel(contents: string, language: string) {
+      if (language !== 'typescript') {
+        return monaco.editor.createModel(contents, language);
+      } else {
+        const model = setupTSModels(monaco);
+        model.setValue(contents);
+        return model;
+      }
+    }
+
     const model =
       dataRef.current.model ||
-      monaco.editor.createModel(
+      createModel(
         challengeFile?.contents ?? '',
         modeMap[challengeFile?.ext ?? 'html']
       );
@@ -401,26 +453,40 @@ const Editor = (props: EditorProps): JSX.Element => {
     dataRef.current.editor = editor;
 
     if (hasEditableRegion()) {
-      initializeDescriptionAndOutputWidgets();
+      initializeRegions();
+      if (!props.showIndependentLowerJaw) {
+        addWidgetsToRegions();
+      }
       addContentChangeListener();
       resetAttempts();
       showEditableRegion(editor);
-      if (isMathJaxAllowed(props.superBlock)) {
+      if (props.superBlock && isMathJaxAllowed(props.superBlock)) {
         initializeMathJax();
       }
     }
 
     const storedAccessibilityMode = () => {
       const accessibility = store.get('accessibilityMode') as boolean;
+
+      const isMacOS = navigator.userAgent.includes('Mac OS');
+      const a11yOffText = isMacOS
+        ? t('aria.editor-a11y-off-macos', { editorName: ariaEditorName })
+        : t('aria.editor-a11y-off-non-macos', { editorName: ariaEditorName });
+      const a11yOnText = isMacOS
+        ? t('aria.editor-a11y-on-macos', { editorName: ariaEditorName })
+        : t('aria.editor-a11y-on-non-macos', { editorName: ariaEditorName });
+
       if (!accessibility) {
         store.set('accessibilityMode', false);
+
+        editor.updateOptions({
+          ariaLabel: a11yOffText
+        });
       }
-      // Only able to set the arialabel when accessibility mode is set to true
-      // Otherwise it gets overwritten by the monaco default aria-label
+
       if (accessibility) {
         editor.updateOptions({
-          ariaLabel:
-            'Accessibility mode set to true. Press Ctrl+e to disable or press Alt+F1 for more options'
+          ariaLabel: a11yOnText
         });
       }
 
@@ -773,7 +839,7 @@ const Editor = (props: EditorProps): JSX.Element => {
     const desc = document.createElement('div');
     const descContainer = document.createElement('div');
     descContainer.classList.add('description-container');
-    if (isMathJaxAllowed(props.superBlock)) {
+    if (props.superBlock && isMathJaxAllowed(props.superBlock)) {
       descContainer.classList.add('mathjax-support');
     }
     domNode.classList.add('editor-upper-jaw');
@@ -783,7 +849,11 @@ const Editor = (props: EditorProps): JSX.Element => {
     descContainer.appendChild(desc);
     desc.innerHTML = description;
     Prism.hooks.add('complete', enhancePrismAccessibility);
-    Prism.hooks.add('complete', makePrismCollapsible);
+
+    // To reduce confusion on the first workshop. Will need to find a better solution.
+    if (props.block !== 'workshop-curriculum-outline') {
+      Prism.hooks.add('complete', makePrismCollapsible);
+    }
     Prism.highlightAllUnder(desc);
 
     // Since the description can be resized without React knowing about it, the
@@ -994,14 +1064,6 @@ const Editor = (props: EditorProps): JSX.Element => {
     }
   };
 
-  function initializeDescriptionAndOutputWidgets() {
-    const editor = dataRef.current.editor;
-    if (editor) {
-      initializeRegions(getEditableRegionFromRedux());
-      addWidgetsToRegions(editor);
-    }
-  }
-
   // Currently, only practice project parts have editable region markers
   // This function is used to enable multiple editor tabs, jaws, etc.
   function hasEditableRegion() {
@@ -1023,11 +1085,11 @@ const Editor = (props: EditorProps): JSX.Element => {
     }
   }
 
-  function initializeRegions(editableRegion: number[]) {
+  function initializeRegions() {
     const { model, editor } = dataRef.current;
     const monaco = monacoRef.current;
     if (!model || !monaco || !editor) return;
-
+    const editableRegion = getEditableRegionFromRedux();
     const editableRange = positionsToRange(monaco, model, [
       editableRegion[0] + 1,
       editableRegion[1] - 1
@@ -1073,7 +1135,10 @@ const Editor = (props: EditorProps): JSX.Element => {
     };
   };
 
-  function addWidgetsToRegions(editor: editor.IStandaloneCodeEditor) {
+  function addWidgetsToRegions() {
+    const editor = dataRef.current.editor;
+    if (!editor) return;
+
     const descriptionNode = createDescription(editor);
 
     const lowerJawNode = createLowerJawContainer(editor);
@@ -1211,14 +1276,17 @@ const Editor = (props: EditorProps): JSX.Element => {
 
     if (hasEditableRegion() && editor) {
       if (props.isResetting) {
-        initializeDescriptionAndOutputWidgets();
+        initializeRegions();
+        if (!props.showIndependentLowerJaw) {
+          addWidgetsToRegions();
+        }
         updateDescriptionZone();
         showEditableRegion(editor);
         resetMarginDecorations();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.challengeFiles, props.isResetting]);
+  }, [props.challengeFiles, props.isResetting, props.showIndependentLowerJaw]);
 
   useEffect(() => {
     const { showProjectPreview, previewOpen } = props;
@@ -1288,12 +1356,25 @@ const Editor = (props: EditorProps): JSX.Element => {
     return challengeIsComplete();
   };
 
+  const showFileName = challengeFile && props.challengeFiles!.length > 1;
   return (
     <Suspense fallback={<Loader loaderDelay={600} />}>
+      {showFileName && (
+        <div className='editor-file-name'>{`${challengeFile.name}.${challengeFile.ext}`}</div>
+      )}
       <span className='notranslate'>
         <MonacoEditor
           editorDidMount={editorDidMount}
           editorWillMount={editorWillMount}
+          editorWillUnmount={(editor, monaco) => {
+            const reactFile = monaco.Uri.file(monacoModelFileMap.reactTypes);
+            const file = monaco.Uri.file(monacoModelFileMap.tsxFile);
+            // Any model we've created has to be manually disposed of to prevent
+            // memory leaks.
+            editor.getModel()?.dispose();
+            monaco.editor.getModel(reactFile)?.dispose();
+            monaco.editor.getModel(file)?.dispose();
+          }}
           onChange={onChange}
           options={{ ...options, folding: !hasEditableRegion() }}
           theme={editorTheme}

@@ -1,11 +1,12 @@
 import { createSelector } from 'reselect';
-import { challengeTypes } from '../../../../../shared/config/challenge-types';
+import { challengeTypes } from '../../../../../shared-dist/config/challenge-types';
 import {
   completedChallengesSelector,
   allChallengesInfoSelector,
   isSignedInSelector,
   completionStateSelector,
-  completedChallengesIdsSelector
+  completedChallengesIdsSelector,
+  completedDailyCodingChallengesIdsSelector
 } from '../../../redux/selectors';
 import {
   getCurrentBlockIds,
@@ -18,10 +19,20 @@ export const challengeFilesSelector = state => state[ns].challengeFiles;
 export const challengeMetaSelector = state => state[ns].challengeMeta;
 export const challengeHooksSelector = state => state[ns].challengeHooks;
 export const challengeTestsSelector = state => state[ns].challengeTests;
-export const consoleOutputSelector = state => state[ns].consoleOut;
+export const consoleOutputSelector = state => {
+  const TRUNCATE_AT = 500000;
+  const out = state[ns].consoleOut?.join('\n');
+  return out?.length > TRUNCATE_AT
+    ? `${out.substring(0, TRUNCATE_AT)} Logs truncated. See browser console for more`
+    : out;
+};
 export const isChallengeCompletedSelector = createSelector(
-  [completedChallengesIdsSelector, challengeMetaSelector],
-  (ids, meta) => ids.includes(meta.id)
+  [
+    completedChallengesIdsSelector,
+    completedDailyCodingChallengesIdsSelector,
+    challengeMetaSelector
+  ],
+  (ids1, ids2, meta) => [...ids1, ...ids2].includes(meta.id)
 );
 export const isCodeLockedSelector = state => state[ns].isCodeLocked;
 export const isCompletionModalOpenSelector = state =>
@@ -41,6 +52,7 @@ export const isFinishQuizModalOpenSelector = state =>
 export const isProjectPreviewModalOpenSelector = state =>
   state[ns].modal.projectPreview;
 export const isShortcutsModalOpenSelector = state => state[ns].modal.shortcuts;
+export const isSpeakingModalOpenSelector = state => state[ns].modal.speaking;
 export const isSubmittingSelector = state => state[ns].isSubmitting;
 export const isResettingSelector = state => state[ns].isResetting;
 
@@ -91,7 +103,9 @@ export const challengeDataSelector = state => {
     challengeType === challengeTypes.js ||
     challengeType === challengeTypes.jsProject ||
     challengeType === challengeTypes.jsLab ||
-    challengeType === challengeTypes.pyLab
+    challengeType === challengeTypes.pyLab ||
+    challengeType === challengeTypes.dailyChallengeJs ||
+    challengeType === challengeTypes.dailyChallengePy
   ) {
     const { required = [], template = '' } = challengeMetaSelector(state);
     challengeData = {

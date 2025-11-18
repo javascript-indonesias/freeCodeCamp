@@ -13,9 +13,11 @@ import { useTranslation } from 'react-i18next';
 import { FullScene } from '../../../../redux/prop-types';
 import { Loader } from '../../../../components/helpers';
 import ClosedCaptionsIcon from '../../../../assets/icons/closedcaptions';
+import ChallengeTranscript from '../challenge-transcript';
 import { sounds, backgrounds, characterAssets } from './scene-assets';
 import Character from './character';
 import { SceneSubject } from './scene-subject';
+import { buildTranscript } from './scene-helpers';
 
 import './scene.css';
 
@@ -349,6 +351,7 @@ export function Scene({
     };
   }, []);
 
+  const transcriptText = buildTranscript(commands);
   return (
     <Col lg={10} lgOffset={1} md={10} mdOffset={1}>
       <div
@@ -396,7 +399,6 @@ export function Scene({
           </>
         )}
       </div>
-
       <div className='scene-controls'>
         <button
           className='scene-btn scene-play-btn'
@@ -432,6 +434,7 @@ export function Scene({
           </button>
         )}
       </div>
+      <ChallengeTranscript transcript={transcriptText} />
       <Spacer size='m' />
     </Col>
   );

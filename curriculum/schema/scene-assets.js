@@ -1,4 +1,5 @@
 const availableCharacters = [
+  // English
   'Alice',
   'Amy',
   'Anna',
@@ -12,7 +13,7 @@ const availableCharacters = [
   'James',
   'Jessica',
   'Jim',
-  'Jose',
+  'Josh',
   'Linda',
   'Lisa',
   'Maria',
@@ -21,14 +22,31 @@ const availableCharacters = [
   'Sarah',
   'Second Candidate',
   'Sophie',
-  'Tom'
+  'Tom',
+
+  // Spanish
+  'Alex',
+  'Ángela',
+  'Camila',
+  'Carlos',
+  'Elena',
+  'Esteban',
+  'Joaquín',
+  'Julieta',
+  'Luis',
+  'Luna',
+  'Marisol',
+  'Mateo',
+  'Noelia',
+  'René',
+  'Sebastián',
+  'Diego',
+  'Valeria'
 ];
 
 const availableBackgrounds = [
-  'bedroom-empty.png',
   'cafe.png',
   'chaos.png',
-  'classroom.png',
   'company1-boardroom.png',
   'company1-breakroom.png',
   'company1-center.png',
@@ -55,26 +73,12 @@ const availableBackgrounds = [
   'company3-roof.png',
   'cubicle.png',
   'desk.png',
-  'farm.png',
   'hacker-space-cafe.png',
   'hacker-space.png',
-  'hall-audience.png',
-  'hall.png',
   'interview-room1.png',
   'interview-room2.png',
   'interview-room3.png',
-  'kid-home.png',
-  'kitchen.png',
-  'laptop-screen.png',
-  'living-room.png',
-  'office-cafe.png',
-  'office.png',
-  'park1.png',
-  'park2.png',
-  'park3.png',
-  'park4.png',
-  'pong-field.png',
-  'tunnel.png'
+  'living-room.png'
 ];
 
 const availableAudios = [
@@ -255,7 +259,34 @@ const availableAudios = [
   'B1_23-3.mp3',
   'B1_24-1.mp3',
   'B1_24-2.mp3',
-  'B1_24-3.mp3'
+  'B1_24-3.mp3',
+  'ES_A1_1.1.mp3',
+  'ES_A1_1.2.mp3',
+  'ES_A1_1.3.mp3',
+  'ES_A1_1.4.mp3',
+  'ES_A1_2.1.mp3',
+  'ES_A1_2.2.mp3',
+  'ES_A1_2.3.mp3',
+  'ES_A1_2.4.mp3',
+  'ES_A1_2_vocabulary.mp3',
+  'ES_A1_3.1.mp3',
+  'ES_A1_3.2.mp3',
+  `ES_A1_first_questions_numbers.mp3`,
+  'ES_A1_first_questions_warmup.mp3',
+  'ES_A1_alphabet.mp3',
+  'ES_A1_alphabet_practice.mp3',
+  'ES_A1_basic_personal_details_numbers_10_29.mp3',
+  'ES_A1_describing_company_and_people_numbers_21_100.mp3',
+  'ES_A1_spanish_fundamentals_numbers_0_9.mp3',
+  'ES_A1_vowels.mp3',
+  'ES_A1_vowels_aiu.mp3',
+  'ES_A1_vowels_oiu.mp3',
+  'ES_A1_vowels_uae.mp3',
+  'ZH_A1_1.1.mp3',
+  'ZH_A1_1.2.mp3',
+  'ZH_A1_1.3.mp3',
+  'ZH_A1_1.4.mp3',
+  'ZH_A1_warmup_vocabulary.mp3'
 ];
 
 const availableAlignments = ['left', 'center', 'right'];

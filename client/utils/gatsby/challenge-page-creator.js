@@ -1,5 +1,5 @@
 const path = require('path');
-const { viewTypes } = require('../../../shared/config/challenge-types');
+const { viewTypes } = require('../../../shared-dist/config/challenge-types');
 
 const backend = path.resolve(
   __dirname,
@@ -50,6 +50,11 @@ const generic = path.resolve(
   '../../src/templates/Challenges/generic/show.tsx'
 );
 
+const examDownload = path.resolve(
+  __dirname,
+  '../../src/templates/Challenges/exam-download/show.tsx'
+);
+
 const views = {
   backend,
   classic,
@@ -60,7 +65,8 @@ const views = {
   exam,
   msTrophy,
   fillInTheBlank,
-  generic
+  generic,
+  examDownload
 };
 
 function getIsFirstStepInBlock(id, edges) {
@@ -96,8 +102,6 @@ exports.createChallengePages = function (
       id,
       isLastChallengeInBlock
     } = node.challenge;
-    // TODO: challengeType === 7 and isPrivate are the same, right? If so, we
-    // should remove one of them.
 
     createPage({
       path: slug,

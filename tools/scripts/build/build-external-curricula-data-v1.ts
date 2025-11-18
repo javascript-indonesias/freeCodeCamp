@@ -1,8 +1,10 @@
 import { mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
-import { submitTypes } from '../../../shared/config/challenge-types';
+import { omit } from 'lodash';
+import { submitTypes } from '../../../shared-dist/config/challenge-types';
 import { type ChallengeNode } from '../../../client/src/redux/prop-types';
-import { SuperBlocks } from '../../../shared/config/curriculum';
+import { SuperBlocks } from '../../../shared-dist/config/curriculum';
+import { patchBlock } from './patches';
 
 export type CurriculumIntros = {
   [keyValue in SuperBlocks]: {
@@ -37,6 +39,9 @@ interface Block<T> {
 
 const ver = 'v1';
 
+// NOTE: Please don't add new superblocks to this list as this version is being deprecated.
+// New superblocks should be added to v2 of the external curriculum data at
+// tools/scripts/build/build-external-curricula-data-v2.ts
 export const orderedSuperBlockInfo = [
   { dashedName: SuperBlocks.RespWebDesignNew, public: true },
   { dashedName: SuperBlocks.DataAnalysisPy, public: true },
@@ -47,7 +52,6 @@ export const orderedSuperBlockInfo = [
   { dashedName: SuperBlocks.TheOdinProject, public: true },
   { dashedName: SuperBlocks.RespWebDesign, public: true },
   { dashedName: SuperBlocks.PythonForEverybody, public: true },
-  { dashedName: SuperBlocks.FullStackDeveloper, public: false },
   { dashedName: SuperBlocks.JsAlgoDataStructNew, public: false },
   { dashedName: SuperBlocks.FrontEndDevLibs, public: false },
   { dashedName: SuperBlocks.DataVis, public: false },
@@ -110,11 +114,23 @@ export function buildExtCurriculumDataV1(
           Block<Record<string, unknown>>
         >{};
 
-        superBlock[superBlockKey]['blocks'][blockName]['desc'] =
-          intros[superBlockKey]['blocks'][blockName]['intro'];
+        const block = intros[superBlockKey]['blocks'][blockName];
+
+        if (!block) {
+          throw Error(
+            `Block ${blockName} not found in intros for ${superBlockKey}`
+          );
+        }
+
+        superBlock[superBlockKey]['blocks'][blockName]['desc'] = block['intro'];
 
         superBlock[superBlockKey]['blocks'][blockName]['challenges'] =
-          curriculum[superBlockKey]['blocks'][blockName]['meta'];
+          patchBlock(
+            omit(curriculum[superBlockKey]['blocks'][blockName]['meta'], [
+              'chapter',
+              'module'
+            ])
+          );
 
         const blockChallenges =
           curriculum[superBlockKey]['blocks'][blockName]['challenges'];

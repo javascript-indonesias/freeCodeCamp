@@ -1,12 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  vi,
+  MockInstance
+} from 'vitest';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { DailyCodingChallengeLanguage, type Prisma } from '@prisma/client';
 import { ObjectId } from 'mongodb';
-import _ from 'lodash';
+import { omit } from 'lodash-es';
 
-import { createUserInput } from '../../utils/create-user';
+import { createUserInput } from '../../utils/create-user.js';
 import {
   defaultUserId,
   defaultUserEmail,
@@ -14,19 +25,35 @@ import {
   setupServer,
   superRequest,
   createSuperRequest,
-  defaultUsername
-} from '../../../jest.utils';
-import { JWT_SECRET } from '../../utils/env';
+  defaultUsername,
+  resetDefaultUser
+} from '../../../vitest.utils.js';
+import { JWT_SECRET } from '../../utils/env.js';
 import {
   clearEnvExam,
   seedEnvExam,
   seedEnvExamAttempt,
   seedExamEnvExamAuthToken
-} from '../../../__mocks__/env-exam';
-import { getMsTranscriptApiUrl } from './user';
+} from '../../../__mocks__/exam-environment-exam.js';
+import { getMsTranscriptApiUrl } from './user.js';
 
-const mockedFetch = jest.fn();
-jest.spyOn(globalThis, 'fetch').mockImplementation(mockedFetch);
+const mockedFetch = vi.fn();
+vi.spyOn(globalThis, 'fetch').mockImplementation(mockedFetch);
+
+let mockDeploymentEnv = 'staging';
+vi.mock('../../utils/env', async () => {
+  const actualEnv =
+    await vi.importActual<typeof import('../../utils/env.js')>(
+      '../../utils/env'
+    );
+  return {
+    ...actualEnv,
+    get DEPLOYMENT_ENV() {
+      return mockDeploymentEnv;
+    },
+    JWT_SECRET: actualEnv.JWT_SECRET
+  };
+});
 
 // This is used to build a test user.
 const testUserData: Prisma.userCreateInput = {
@@ -126,7 +153,9 @@ const testUserData: Prisma.userCreateInput = {
   ],
   yearsTopContributor: ['2018'],
   twitter: '@foobar',
-  linkedin: 'linkedin.com/foobar'
+  bluesky: '@foobar',
+  linkedin: 'linkedin.com/foobar',
+  sendQuincyEmail: false
 };
 
 const minimalUserData: Prisma.userCreateInput = {
@@ -139,6 +168,7 @@ const minimalUserData: Prisma.userCreateInput = {
   picture: 'https://www.freecodecamp.org/cat.png',
   sendQuincyEmail: true,
   username: 'testuser',
+  usernameDisplay: 'testuser',
   unsubscribeId: '1234567890'
 };
 
@@ -244,6 +274,7 @@ const publicUserData = {
   githubProfile: testUserData.githubProfile,
   is2018DataVisCert: testUserData.is2018DataVisCert,
   is2018FullStackCert: testUserData.is2018FullStackCert, // TODO: should this be returned? The client doesn't use it at the moment.
+  isA2EnglishCert: testUserData.isA2EnglishCert,
   isApisMicroservicesCert: testUserData.isApisMicroservicesCert,
   isBackEndCert: testUserData.isBackEndCert,
   isCheater: testUserData.isCheater,
@@ -258,12 +289,14 @@ const publicUserData = {
   isHonest: testUserData.isHonest,
   isInfosecCertV7: testUserData.isInfosecCertV7,
   isInfosecQaCert: testUserData.isInfosecQaCert,
+  isJavascriptCertV9: testUserData.isJavascriptCertV9,
   isJsAlgoDataStructCert: testUserData.isJsAlgoDataStructCert,
   isJsAlgoDataStructCertV8: testUserData.isJsAlgoDataStructCertV8,
   isMachineLearningPyCertV7: testUserData.isMachineLearningPyCertV7,
   isQaCertV7: testUserData.isQaCertV7,
   isRelationalDatabaseCertV8: testUserData.isRelationalDatabaseCertV8,
   isRespWebDesignCert: testUserData.isRespWebDesignCert,
+  isRespWebDesignCertV9: testUserData.isRespWebDesignCertV9,
   isSciCompPyCertV7: testUserData.isSciCompPyCertV7,
   linkedin: testUserData.linkedin,
   location: testUserData.location,
@@ -275,7 +308,10 @@ const publicUserData = {
   profileUI: testUserData.profileUI,
   savedChallenges: testUserData.savedChallenges,
   twitter: 'https://twitter.com/foobar',
-  username: testUserData.usernameDisplay, // It defaults to usernameDisplay
+  bluesky: 'https://bsky.app/profile/foobar',
+  sendQuincyEmail: testUserData.sendQuincyEmail,
+  username: testUserData.username,
+  usernameDisplay: testUserData.usernameDisplay,
   website: testUserData.website,
   yearsTopContributor: testUserData.yearsTopContributor
 };
@@ -291,6 +327,7 @@ const sessionUserData = {
 
 const baseProgressData = {
   currentChallengeId: '',
+  isA2EnglishCert: false,
   isRespWebDesignCert: false,
   is2018DataVisCert: false,
   isFrontEndLibsCert: false,
@@ -304,10 +341,12 @@ const baseProgressData = {
   isBackEndCert: false,
   isDataVisCert: false,
   isFullStackCert: false,
+  isJavascriptCertV9: false,
   isSciCompPyCertV7: false,
   isDataAnalysisPyCertV7: false,
   isMachineLearningPyCertV7: false,
   isRelationalDatabaseCertV8: false,
+  isRespWebDesignCertV9: false,
   isCollegeAlgebraPyCertV8: false,
   completedChallenges: [],
   completedDailyCodingChallenges: [],
@@ -383,15 +422,17 @@ describe('userRoutes', () => {
       });
 
       test('POST returns 200 status code with empty object', async () => {
-        expect(await fastifyTestInstance.prisma.user.count()).toBe(1);
+        const initialCount = await fastifyTestInstance.prisma.user.count();
         const response = await superPost('/account/delete');
-        const userCount = await fastifyTestInstance.prisma.user.count({
+        const finalCount = await fastifyTestInstance.prisma.user.count();
+        const deletedUser = await fastifyTestInstance.prisma.user.findFirst({
           where: { email: testUserData.email }
         });
 
         expect(response.body).toStrictEqual({});
         expect(response.status).toBe(200);
-        expect(userCount).toBe(0);
+        expect(finalCount).toBe(initialCount - 1);
+        expect(deletedUser).toBeNull();
       });
 
       test('POST deletes Microsoft usernames associated with the user', async () => {
@@ -419,17 +460,17 @@ describe('userRoutes', () => {
       test("POST deletes all the user's cookies", async () => {
         const res = await superPost('/account/delete');
 
-        const setCookie = res.headers['set-cookie'];
+        const setCookie = res.headers['set-cookie'] as string[];
         expect(setCookie).toEqual(
           expect.arrayContaining([
             expect.stringMatching(
-              /^jwt_access_token=; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+              /^_csrf=; Max-Age=0; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
             ),
             expect.stringMatching(
-              /^csrf_token=; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+              /^csrf_token=; Max-Age=0; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
             ),
             expect.stringMatching(
-              /^_csrf=; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+              /^jwt_access_token=; Max-Age=0; Path=\/; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
             )
           ])
         );
@@ -440,13 +481,13 @@ describe('userRoutes', () => {
         await seedEnvExam();
         await seedEnvExamAttempt();
         const countBefore =
-          await fastifyTestInstance.prisma.envExamAttempt.count();
+          await fastifyTestInstance.prisma.examEnvironmentExamAttempt.count();
         expect(countBefore).toBe(1);
 
         const res = await superPost('/account/delete');
 
         const countAfter =
-          await fastifyTestInstance.prisma.envExamAttempt.count();
+          await fastifyTestInstance.prisma.examEnvironmentExamAttempt.count();
         expect(countAfter).toBe(0);
         expect(res.status).toBe(200);
       });
@@ -463,6 +504,199 @@ describe('userRoutes', () => {
           await fastifyTestInstance.prisma.examEnvironmentAuthorizationToken.count();
         expect(countAfter).toBe(0);
         expect(res.status).toBe(200);
+      });
+
+      test('handles concurrent requests to delete the same user', async () => {
+        const deletePromises = Array.from({ length: 2 }, () =>
+          superPost('/account/delete')
+        );
+
+        const responses = await Promise.all(deletePromises);
+
+        const userCount = await fastifyTestInstance.prisma.user.count({
+          where: { email: testUserData.email }
+        });
+        responses.forEach(response => {
+          expect(response.status).toBe(200);
+          expect(response.body).toStrictEqual({});
+        });
+        expect(userCount).toBe(0);
+      });
+
+      test("only deletes the logged in user's data", async () => {
+        const initialCount = await fastifyTestInstance.prisma.user.count();
+        const otherEmail = 'an.random@user';
+        const otherUser = await fastifyTestInstance.prisma.user.create({
+          data: {
+            ...testUserData,
+            email: otherEmail
+          }
+        });
+        expect(otherUser.email).toBe(otherEmail);
+        const afterAdd = await fastifyTestInstance.prisma.user.count();
+        expect(afterAdd).toBe(initialCount + 1);
+
+        await superPost('/account/delete');
+
+        const finalCount = await fastifyTestInstance.prisma.user.count();
+        expect(finalCount).toBe(initialCount);
+        const remaining = await fastifyTestInstance.prisma.user.findFirst({
+          where: { email: otherEmail }
+        });
+        expect(remaining).not.toBeNull();
+      });
+
+      test('logs if it is asked to delete a non-existent user', async () => {
+        const spy = vi.spyOn(fastifyTestInstance.log, 'warn');
+
+        // Note: this could be flaky since the log is generated if the two
+        // requests are concurrent. If they're sequential the second request
+        // will be not be authed and hence not log anything.
+        const deletePromises = Array.from({ length: 2 }, () =>
+          superPost('/account/delete')
+        );
+        await Promise.all(deletePromises);
+        const messages: string[] = spy.mock.calls.map(call =>
+          call.map(part => String(part)).join(' ')
+        );
+        const found = messages.some(m =>
+          m.includes(`User with id ${defaultUserId} not found for deletion.`)
+        );
+        expect(found).toBe(true);
+      });
+    });
+
+    describe('/users/:userId', () => {
+      afterEach(async () => {
+        await fastifyTestInstance.prisma.userToken.deleteMany({
+          where: { OR: [{ userId: defaultUserId }, { userId: otherUserId }] }
+        });
+        await fastifyTestInstance.prisma.msUsername.deleteMany({
+          where: { OR: [{ userId: defaultUserId }, { userId: otherUserId }] }
+        });
+        await clearEnvExam();
+      });
+
+      test('DELETE returns 204 status code with empty object', async () => {
+        const response = await superDelete(`/users/${defaultUserId}`);
+        const userCount = await fastifyTestInstance.prisma.user.count({
+          where: { email: testUserData.email }
+        });
+
+        expect(response.body).toStrictEqual({});
+        expect(response.status).toBe(204);
+        expect(userCount).toBe(0);
+      });
+
+      test('DELETE deletes Microsoft usernames associated with the user', async () => {
+        await fastifyTestInstance.prisma.msUsername.createMany({
+          data: msUsernameData
+        });
+
+        await superDelete(`/users/${defaultUserId}`);
+        expect(await fastifyTestInstance.prisma.msUsername.count()).toBe(1);
+      });
+
+      test('DELETE deletes userTokens associated with the user', async () => {
+        await fastifyTestInstance.prisma.userToken.createMany({
+          data: tokenData
+        });
+
+        await superDelete(`/users/${defaultUserId}`);
+
+        const userTokens =
+          await fastifyTestInstance.prisma.userToken.findMany();
+        expect(userTokens).toHaveLength(1);
+        expect(userTokens[0]?.userId).toBe(otherUserId);
+      });
+
+      test("DELETE deletes all the user's cookies", async () => {
+        const res = await superDelete(`/users/${defaultUserId}`);
+
+        const setCookie = res.headers['set-cookie'] as string[];
+        expect(setCookie).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /^_csrf=; Max-Age=0; Path=\/:?; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+            ),
+            expect.stringMatching(
+              /^csrf_token=; Max-Age=0; Path=\/:?; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+            ),
+            expect.stringMatching(
+              /^jwt_access_token=; Max-Age=0; Path=\/:?; Expires=Thu, 01 Jan 1970 00:00:00 GMT/
+            )
+          ])
+        );
+        expect(setCookie).toHaveLength(3);
+      });
+
+      test("DELETE deletes all the user's exam attempts", async () => {
+        await seedEnvExam();
+        await seedEnvExamAttempt();
+        const countBefore =
+          await fastifyTestInstance.prisma.examEnvironmentExamAttempt.count();
+        expect(countBefore).toBe(1);
+
+        const res = await superDelete(`/users/${defaultUserId}`);
+
+        const countAfter =
+          await fastifyTestInstance.prisma.examEnvironmentExamAttempt.count();
+        expect(countAfter).toBe(0);
+        expect(res.status).toBe(204);
+      });
+
+      test("DELETE deletes all the user's exam tokens", async () => {
+        await seedExamEnvExamAuthToken();
+        const countBefore =
+          await fastifyTestInstance.prisma.examEnvironmentAuthorizationToken.count();
+        expect(countBefore).toBe(1);
+
+        const res = await superDelete(`/users/${defaultUserId}`);
+
+        const countAfter =
+          await fastifyTestInstance.prisma.examEnvironmentAuthorizationToken.count();
+        expect(countAfter).toBe(0);
+        expect(res.status).toBe(204);
+      });
+
+      test("only deletes the logged in user's data", async () => {
+        const initialCount = await fastifyTestInstance.prisma.user.count();
+        await fastifyTestInstance.prisma.user.create({
+          data: {
+            ...testUserData,
+            email: 'an.random@user'
+          }
+        });
+        expect(await fastifyTestInstance.prisma.user.count()).toBe(
+          initialCount + 1
+        );
+
+        await superDelete(`/users/${defaultUserId}`);
+
+        const userCount = await fastifyTestInstance.prisma.user.count();
+        expect(userCount).toBe(initialCount);
+      });
+
+      test('logs if it is asked to delete a non-existent user', async () => {
+        const spy = vi.spyOn(fastifyTestInstance.log, 'warn');
+
+        const deletePromises = Array.from({ length: 2 }, () =>
+          superDelete(`/users/${defaultUserId}`)
+        );
+
+        await Promise.all(deletePromises);
+
+        const messages = spy.mock.calls.flat().map(String);
+        expect(
+          messages.some(m =>
+            m.includes(`User with id ${defaultUserId} not found for deletion.`)
+          )
+        ).toBe(true);
+      });
+
+      test('returns 403 if attempting to delete a different user', async () => {
+        const res = await superDelete(`/users/${otherUserId}`);
+        expect(res.status).toBe(403);
       });
     });
 
@@ -748,7 +982,7 @@ describe('userRoutes', () => {
         const setCookies = res.get('Set-Cookie');
 
         const publicUser = {
-          ..._.omit(minimalUserData, ['externalId', 'unsubscribeId']),
+          ...omit(minimalUserData, ['externalId', 'unsubscribeId']),
           ...computedProperties,
           id: testUser.id,
           joinDate: new ObjectId(testUser.id).getTimestamp().toISOString(),
@@ -766,6 +1000,7 @@ describe('userRoutes', () => {
           yearsTopContributor: [],
           is2018DataVisCert: false,
           is2018FullStackCert: false,
+          isA2EnglishCert: false,
           isApisMicroservicesCert: false,
           isBackEndCert: false,
           isCheater: false,
@@ -776,6 +1011,7 @@ describe('userRoutes', () => {
           isFrontEndCert: false,
           isFrontEndLibsCert: false,
           isFullStackCert: false,
+          isJavascriptCertV9: false,
           isHonest: false,
           isInfosecCertV7: false,
           isInfosecQaCert: false,
@@ -785,6 +1021,7 @@ describe('userRoutes', () => {
           isQaCertV7: false,
           isRelationalDatabaseCertV8: false,
           isRespWebDesignCert: false,
+          isRespWebDesignCertV9: false,
           isSciCompPyCertV7: false,
           keyboardShortcuts: false,
           location: '',
@@ -808,15 +1045,16 @@ describe('userRoutes', () => {
     });
 
     describe('/user/report-user', () => {
-      let sendEmailSpy: jest.SpyInstance;
+      let sendEmailSpy: MockInstance;
       beforeEach(() => {
-        sendEmailSpy = jest
+        sendEmailSpy = vi
           .spyOn(fastifyTestInstance, 'sendEmail')
-          .mockImplementation(jest.fn());
+          .mockImplementation(vi.fn());
       });
 
-      afterEach(() => {
-        jest.clearAllMocks();
+      afterEach(async () => {
+        await resetDefaultUser();
+        vi.clearAllMocks();
       });
 
       test('POST returns 400 for empty username', async () => {
@@ -839,6 +1077,24 @@ describe('userRoutes', () => {
         });
 
         expect(response.statusCode).toBe(400);
+      });
+
+      test('POST returns 403 for users with no email', async () => {
+        await fastifyTestInstance.prisma.user.updateMany({
+          where: { email: testUserData.email },
+          data: { email: null }
+        });
+
+        const response = await superPost('/user/report-user').send({
+          username: testUserData.username,
+          reportDescription: 'Test Report'
+        });
+
+        expect(response.statusCode).toBe(403);
+        expect(response.body).toStrictEqual({
+          type: 'danger',
+          message: 'flash.report-error'
+        });
       });
 
       test('POST sanitises report description', async () => {
@@ -962,7 +1218,7 @@ Thanks and regards,
           });
         });
 
-        it('handles missing transcript urls', async () => {
+        test('handles missing transcript urls', async () => {
           const response = await superPost('/user/ms-username');
 
           expect(response.body).toStrictEqual({
@@ -972,25 +1228,19 @@ Thanks and regards,
           expect(response.statusCode).toBe(400);
         });
 
-        it('handles invalid transcript urls', async () => {
-          mockedFetch.mockImplementationOnce(() =>
-            Promise.resolve({
-              ok: false
-            })
-          );
-
+        test('handles invalid transcript urls', async () => {
           const response = await superPost('/user/ms-username').send({
             msTranscriptUrl: 'https://www.example.com'
           });
 
           expect(response.body).toStrictEqual({
             type: 'error',
-            message: 'flash.ms.transcript.link-err-2'
+            message: 'flash.ms.transcript.link-err-1'
           });
-          expect(response.statusCode).toBe(404);
+          expect(response.statusCode).toBe(400);
         });
 
-        it('handles the case that MS does not return a username', async () => {
+        test('handles the case that MS does not return a username', async () => {
           mockedFetch.mockImplementationOnce(() =>
             Promise.resolve({
               ok: true,
@@ -999,7 +1249,8 @@ Thanks and regards,
           );
 
           const response = await superPost('/user/ms-username').send({
-            msTranscriptUrl: 'https://www.example.com'
+            msTranscriptUrl:
+              'https://learn.microsoft.com/en-us/users/not/transcript/8u6ert43q1p'
           });
 
           expect(response.body).toStrictEqual({
@@ -1009,7 +1260,7 @@ Thanks and regards,
           expect(response.statusCode).toBe(500);
         });
 
-        it('handles duplicate Microsoft usernames', async () => {
+        test('handles duplicate Microsoft usernames', async () => {
           mockedFetch.mockImplementationOnce(() =>
             Promise.resolve({
               ok: true,
@@ -1029,7 +1280,8 @@ Thanks and regards,
           });
 
           const response = await superPost('/user/ms-username').send({
-            msTranscriptUrl: 'https://www.example.com'
+            msTranscriptUrl:
+              'https://learn.microsoft.com/en-us/users/mot01/transcript/8wert4'
           });
 
           expect(response.body).toStrictEqual({
@@ -1040,7 +1292,7 @@ Thanks and regards,
           expect(response.statusCode).toBe(403);
         });
 
-        it('returns the username on success', async () => {
+        test('returns the username on success', async () => {
           const msUsername = 'ms-user';
           mockedFetch.mockImplementationOnce(() =>
             Promise.resolve({
@@ -1052,7 +1304,8 @@ Thanks and regards,
             })
           );
           const response = await superPost('/user/ms-username').send({
-            msTranscriptUrl: 'https://www.example.com'
+            msTranscriptUrl:
+              'https://learn.microsoft.com/en-us/users/mot01/transcript/8ert43q'
           });
 
           expect(response.body).toStrictEqual({
@@ -1061,7 +1314,7 @@ Thanks and regards,
           expect(response.statusCode).toBe(200);
         });
 
-        it('creates a record of the linked account', async () => {
+        test('creates a record of the linked account', async () => {
           const msUsername = 'super-user';
           mockedFetch.mockImplementationOnce(() =>
             Promise.resolve({
@@ -1074,7 +1327,8 @@ Thanks and regards,
           );
 
           await superPost('/user/ms-username').send({
-            msTranscriptUrl: 'https://www.example.com'
+            msTranscriptUrl:
+              'https://learn.microsoft.com/en-us/users/mot01/transcript/12345'
           });
 
           const linkedAccount =
@@ -1090,7 +1344,7 @@ Thanks and regards,
           });
         });
 
-        it('removes any other accounts linked to the same user', async () => {
+        test('removes any other accounts linked to the same user', async () => {
           const msUsernameOne = 'super-user';
           const msUsernameTwo = 'super-user-2';
           mockedFetch
@@ -1122,10 +1376,12 @@ Thanks and regards,
           });
 
           await superPost('/user/ms-username').send({
-            msTranscriptUrl: 'https://www.example.com'
+            msTranscriptUrl:
+              'https://learn.microsoft.com/en-us/users/mot01/transcript/8u6awert43q1plo'
           });
           await superPost('/user/ms-username').send({
-            msTranscriptUrl: 'https://www.example.com'
+            msTranscriptUrl:
+              'https://learn.microsoft.com/en-us/users/mot01/transcript/8u6awert43q1plo'
           });
 
           const linkedAccounts =
@@ -1135,7 +1391,7 @@ Thanks and regards,
           expect(linkedAccounts[1]?.msUsername).toBe(msUsernameTwo);
         });
 
-        it('calls the Microsoft API with the correct url', async () => {
+        test('calls the Microsoft API with the correct url', async () => {
           const msTranscriptUrl =
             'https://learn.microsoft.com/en-us/users/mot01/transcript/8u6awert43q1plo';
 
@@ -1202,6 +1458,14 @@ Thanks and regards,
     });
 
     describe('/user/exam-environment/token', () => {
+      beforeEach(() => {
+        mockDeploymentEnv = 'staging';
+      });
+
+      afterAll(() => {
+        mockDeploymentEnv = 'production';
+      });
+
       afterEach(async () => {
         await fastifyTestInstance.prisma.examEnvironmentAuthorizationToken.deleteMany(
           {
@@ -1211,6 +1475,7 @@ Thanks and regards,
       });
 
       test('POST generates a new token if one does not exist', async () => {
+        mockDeploymentEnv = 'production';
         const response = await superPost('/user/exam-environment/token');
         const { examEnvironmentAuthorizationToken } = response.body;
 
@@ -1233,6 +1498,7 @@ Thanks and regards,
       });
 
       test('POST only allows for one token per user id', async () => {
+        mockDeploymentEnv = 'production';
         const token =
           await fastifyTestInstance.prisma.examEnvironmentAuthorizationToken.create(
             {
@@ -1264,6 +1530,44 @@ Thanks and regards,
           );
         expect(tokens).toHaveLength(1);
       });
+
+      test('POST does not generate a new token in non-production environments for non-staff', async () => {
+        // Override deployment environment for this test
+        mockDeploymentEnv = 'staging';
+        const response = await superPost('/user/exam-environment/token');
+        expect(response.status).toBe(403);
+      });
+
+      test('POST does generate a new token in non-production environments for staff', async () => {
+        // Override deployment environment for this test
+        mockDeploymentEnv = 'staging';
+        await fastifyTestInstance.prisma.user.update({
+          where: {
+            id: defaultUserId
+          },
+          data: { email: 'camperbot@freecodecamp.org' }
+        });
+
+        const response = await superPost('/user/exam-environment/token');
+        const { examEnvironmentAuthorizationToken } = response.body;
+
+        const decodedToken = jwt.decode(examEnvironmentAuthorizationToken);
+
+        expect(decodedToken).toStrictEqual({
+          examEnvironmentAuthorizationToken:
+            expect.stringMatching(/^[a-z0-9]{24}$/),
+          iat: expect.any(Number)
+        });
+
+        expect(() =>
+          jwt.verify(examEnvironmentAuthorizationToken, 'wrong-secret')
+        ).toThrow();
+        expect(() =>
+          jwt.verify(examEnvironmentAuthorizationToken, JWT_SECRET)
+        ).not.toThrow();
+
+        expect(response.status).toBe(201);
+      });
     });
   });
 
@@ -1276,6 +1580,7 @@ Thanks and regards,
     });
 
     const endpoints: { path: string; method: 'GET' | 'POST' | 'DELETE' }[] = [
+      { path: `/users/${otherUserId}`, method: 'DELETE' },
       { path: '/account/delete', method: 'POST' },
       { path: '/account/reset-progress', method: 'POST' },
       { path: '/user/get-session-user', method: 'GET' },
@@ -1310,19 +1615,42 @@ describe('Microsoft helpers', () => {
     const urlWithQueryParams = `${urlWithoutSlash}?foo=bar`;
     const urlWithQueryParamsAndSlash = `${urlWithSlash}?foo=bar`;
 
-    it('should extract the transcript id from the url', () => {
-      expect(getMsTranscriptApiUrl(urlWithoutSlash)).toBe(expectedUrl);
+    test('should extract the transcript id from the url', () => {
+      expect(getMsTranscriptApiUrl(urlWithoutSlash)).toEqual({
+        error: null,
+        data: expectedUrl
+      });
     });
 
-    it('should handle trailing slashes', () => {
-      expect(getMsTranscriptApiUrl(urlWithSlash)).toBe(expectedUrl);
+    test('should handle trailing slashes', () => {
+      expect(getMsTranscriptApiUrl(urlWithSlash)).toEqual({
+        error: null,
+        data: expectedUrl
+      });
     });
 
-    it('should ignore query params', () => {
-      expect(getMsTranscriptApiUrl(urlWithQueryParams)).toBe(expectedUrl);
-      expect(getMsTranscriptApiUrl(urlWithQueryParamsAndSlash)).toBe(
-        expectedUrl
-      );
+    test('should ignore query params', () => {
+      expect(getMsTranscriptApiUrl(urlWithQueryParams)).toEqual({
+        error: null,
+        data: expectedUrl
+      });
+      expect(getMsTranscriptApiUrl(urlWithQueryParamsAndSlash)).toEqual({
+        error: null,
+        data: expectedUrl
+      });
+    });
+
+    test('should return an error for invalid URLs', () => {
+      const validBadUrl = 'https://www.example.com/invalid-url';
+      expect(getMsTranscriptApiUrl(validBadUrl)).toEqual({
+        error: expect.any(String),
+        data: null
+      });
+      const invalidUrl = ' ';
+      expect(getMsTranscriptApiUrl(invalidUrl)).toEqual({
+        error: expect.any(String),
+        data: null
+      });
     });
   });
 });

@@ -1,7 +1,10 @@
 import fastifyOauth2, { type OAuth2Namespace } from '@fastify/oauth2';
 import { type FastifyPluginCallbackTypebox } from '@fastify/type-provider-typebox';
+import { Type } from 'typebox';
+import { Value } from 'typebox/value';
 import fp from 'fastify-plugin';
 
+import { isError } from 'lodash-es';
 import {
   API_LOCATION,
   AUTH0_CLIENT_ID,
@@ -9,19 +12,24 @@ import {
   AUTH0_DOMAIN,
   COOKIE_DOMAIN,
   HOME_LOCATION
-} from '../utils/env';
-import { findOrCreateUser } from '../routes/helpers/auth-helpers';
-import { createAccessToken } from '../utils/tokens';
-import {
-  getLoginRedirectParams,
-  getPrefixedLandingPath
-} from '../utils/redirection';
+} from '../utils/env.js';
+import { findOrCreateUser } from '../routes/helpers/auth-helpers.js';
+import { createAccessToken } from '../utils/tokens.js';
+import { getLoginRedirectParams } from '../utils/redirection.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
     auth0OAuth: OAuth2Namespace;
   }
 }
+
+const Auth0ErrorSchema = Type.Object({
+  data: Type.Object({
+    payload: Type.Object({
+      error: Type.String()
+    })
+  })
+});
 
 /**
  * Fastify plugin for Auth0 authentication. This uses fastify-plugin to expose
@@ -74,6 +82,25 @@ export const auth0Client: FastifyPluginCallbackTypebox = fp(
         );
         void reply.redirect(redirectUrl);
       });
+
+      fastify.get('/signin/google', async function (request, reply) {
+        const returnTo = request.headers.referer ?? `${HOME_LOCATION}/learn`;
+        void reply.setCookie('login-returnto', returnTo, {
+          domain: COOKIE_DOMAIN,
+          httpOnly: true,
+          secure: true,
+          signed: true,
+          sameSite: 'lax'
+        });
+
+        const authorizationEndpoint =
+          await this.auth0OAuth.generateAuthorizationUri(request, reply);
+
+        const url = new URL(authorizationEndpoint);
+        url.searchParams.set('connection', 'google-oauth2');
+
+        void reply.redirect(url.toString());
+      });
       done();
     });
 
@@ -97,8 +124,7 @@ export const auth0Client: FastifyPluginCallbackTypebox = fp(
         }
       }
 
-      const { returnTo, pathPrefix, origin } = getLoginRedirectParams(req);
-      const redirectBase = getPrefixedLandingPath(origin, pathPrefix);
+      const { returnTo } = getLoginRedirectParams(req);
 
       let token;
       try {
@@ -111,8 +137,11 @@ export const auth0Client: FastifyPluginCallbackTypebox = fp(
         // functions.
         if (error instanceof Error && error.message === 'Invalid state') {
           logger.error('Auth failed: invalid state');
+        } else if (Value.Check(Auth0ErrorSchema, error)) {
+          const errorType = error.data.payload.error;
+          logger.error(error, 'Auth failed: ' + errorType);
         } else {
-          logger.error(error, 'Auth failed');
+          logger.error(error, 'Failed to get access token from Auth0');
           fastify.Sentry.captureException(error);
         }
         // It's important _not_ to redirect to /signin here, as that could
@@ -128,32 +157,38 @@ export const auth0Client: FastifyPluginCallbackTypebox = fp(
         const userinfo = (await fastify.auth0OAuth.userinfo(token)) as {
           email: string;
         };
+        logger.info(`Auth0 userinfo: ${JSON.stringify(userinfo)}`);
         email = userinfo.email;
-        if (typeof email !== 'string') throw Error('Invalid userinfo response');
+        if (typeof email !== 'string') {
+          return reply.redirectWithMessage(returnTo, {
+            type: 'danger',
+            content: 'flash.no-email-in-userinfo'
+          });
+        }
       } catch (error) {
-        logger.error({ error }, 'Auth failed');
-        fastify.Sentry.captureException(error);
-        return reply.redirect('/signin');
+        logger.error(error, 'Failed to get userinfo from Auth0');
+        if (isError(error) && 'innerError' in error) {
+          // This is a specific error from the @fastify/oauth2 plugin.
+          const innerError = error.innerError as Error;
+          innerError.message = `Auth0 userinfo error: ${innerError.message}`;
+          fastify.Sentry.captureException(error.innerError);
+        } else {
+          fastify.Sentry.captureException(error);
+        }
+        return reply.redirectWithMessage(returnTo, {
+          type: 'danger',
+          content: 'flash.generic-error'
+        });
       }
 
-      const { id, acceptedPrivacyTerms } = await findOrCreateUser(
-        fastify,
-        email
-      );
+      const { id } = await findOrCreateUser(fastify, email);
 
       reply.setAccessTokenCookie(createAccessToken(id));
 
-      if (acceptedPrivacyTerms) {
-        void reply.redirectWithMessage(returnTo, {
-          type: 'success',
-          content: 'flash.signin-success'
-        });
-      } else {
-        void reply.redirectWithMessage(`${redirectBase}/email-sign-up`, {
-          type: 'success',
-          content: 'flash.signin-success'
-        });
-      }
+      void reply.redirectWithMessage(returnTo, {
+        type: 'success',
+        content: 'flash.signin-success'
+      });
     });
 
     done();

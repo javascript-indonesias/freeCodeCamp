@@ -29,7 +29,7 @@ module.exports.blankUser = {
   location: '',
   picture: '',
   acceptedPrivacyTerms: true,
-  sendQuincyEmail: false,
+  sendQuincyEmail: null,
   currentChallengeId: '',
   isHonest: false,
   isFrontEndCert: false,
@@ -91,7 +91,7 @@ module.exports.publicUser = {
   location: '',
   picture: '',
   acceptedPrivacyTerms: true,
-  sendQuincyEmail: false,
+  sendQuincyEmail: null,
   currentChallengeId: '',
   isHonest: false,
   isFrontEndCert: false,
@@ -153,7 +153,7 @@ module.exports.demoUser = {
   location: '',
   picture: '',
   acceptedPrivacyTerms: true,
-  sendQuincyEmail: false,
+  sendQuincyEmail: null,
   currentChallengeId: '',
   isHonest: false,
   isFrontEndCert: false,
@@ -217,16 +217,19 @@ module.exports.fullyCertifiedUser = {
   location: '',
   picture: '',
   acceptedPrivacyTerms: true,
-  sendQuincyEmail: false,
+  sendQuincyEmail: null,
   currentChallengeId: '',
   isHonest: true,
+  isA2EnglishCert: true,
   isFrontEndCert: true,
   isDataVisCert: true,
   isBackEndCert: true,
   isFullStackCert: true,
   isRespWebDesignCert: true,
+  isRespWebDesignCertV9: true,
   is2018DataVisCert: true,
   isFrontEndLibsCert: true,
+  isJavascriptCertV9: true,
   isJsAlgoDataStructCert: true,
   isJsAlgoDataStructCertV8: true,
   isApisMicroservicesCert: true,
@@ -12263,6 +12266,29 @@ module.exports.fullyCertifiedUser = {
     {
       completedDate: 1729240849345,
       id: '6763500bd5a85d5898cc21a9'
+    },
+    {
+      completedDate: 1729240849345,
+      id: '672d26269456511aa3db614d'
+    },
+    {
+      completedDate: 1729240849345,
+      id: '672d45583fd75a504136fbbb'
+    },
+    {
+      completedDate: 1729240849345,
+      id: '672d45651d83b450801efb3a'
+    },
+    {
+      completedDate: 1729240849345,
+      id: '672d456f4ac35950b300e93f'
+    }
+  ],
+  completedDailyCodingChallenges: [
+    {
+      id: '6814d8e1516e86b171929de4',
+      completedDate: 1729240849345,
+      languages: ['javascript']
     }
   ],
   completedExams: [

@@ -1,5 +1,5 @@
 import i18next from 'i18next';
-import { escape } from 'lodash-es';
+import { escape, isEmpty } from 'lodash-es';
 import { channel } from 'redux-saga';
 import {
   call,
@@ -17,7 +17,7 @@ import {
 import {
   canSaveToDB,
   challengeTypes
-} from '../../../../../shared/config/challenge-types';
+} from '../../../../../shared-dist/config/challenge-types';
 import { createFlashMessage } from '../../../components/Flash/redux';
 import { FlashMessages } from '../../../components/Flash/redux/flash-messages';
 import {
@@ -68,6 +68,13 @@ import {
 // How long before bailing out of a preview.
 const previewTimeout = 2500;
 
+const LOGS_TO_IGNORE = [
+  // https://cdn.tailwindcss.com
+  'cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation',
+  // https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4
+  'The browser build of Tailwind CSS should not be used in production. To use Tailwind CSS in production, use the Tailwind CLI, Vite plugin, or PostCSS plugin: https://tailwindcss.com/docs/installation'
+];
+
 // when 'run tests' is clicked, do this first
 function* executeCancellableChallengeSaga(payload) {
   const { challengeType, id } = yield select(challengeMetaSelector);
@@ -114,9 +121,6 @@ export function* executeChallengeSaga({ payload }) {
     const hooks = yield select(challengeHooksSelector);
     yield put(updateTests(tests));
 
-    yield fork(takeEveryLog, consoleProxy);
-    const proxyLogger = args => consoleProxy.put(args);
-
     const challengeData = yield select(challengeDataSelector);
     const challengeMeta = yield select(challengeMetaSelector);
     // The buildData is used even if there are build errors, so that lessons
@@ -127,13 +131,7 @@ export function* executeChallengeSaga({ payload }) {
       disableLoopProtectPreview: challengeMeta.disableLoopProtectPreview,
       usesTestRunner: true
     });
-    const document = yield getContext('document');
-    const testRunner = yield call(
-      getTestRunner,
-      { ...buildData, hooks },
-      { proxyLogger },
-      document
-    );
+    const testRunner = yield call(getTestRunner, { ...buildData, hooks });
     const testResults = yield executeTests(testRunner, tests);
     yield put(updateTests(testResults));
 
@@ -169,14 +167,6 @@ export function* executeChallengeSaga({ payload }) {
   }
 }
 
-function* takeEveryLog(channel) {
-  // TODO: move all stringifying and escaping into the reducer so there is a
-  // single place responsible for formatting the logs.
-  yield takeEvery(channel, function* (args) {
-    yield put(updateLogs(escape(args)));
-  });
-}
-
 function* takeEveryConsole(channel) {
   // TODO: move all stringifying and escaping into the reducer so there is a
   // single place responsible for formatting the console output.
@@ -194,27 +184,31 @@ function* buildChallengeData(challengeData, options) {
   }
 }
 
-function* executeTests(testRunner, tests, testTimeout = 5000) {
+export function* executeTests(testRunner, tests, testTimeout = 5000) {
+  const testStrings = tests.map(test => test.testString);
+  const rawResults = yield call(testRunner, testStrings, testTimeout);
+
   const testResults = [];
-  for (let i = 0; i < tests.length; i++) {
+  for (let i = 0; i < rawResults.length; i++) {
     const { text, testString } = tests[i];
     const newTest = { text, testString, running: false };
-    // only the last test outputs console.logs to avoid log duplication.
-    const firstTest = i === 1;
+    // only the first test outputs console.logs to avoid log duplication.
+    const firstTest = i === 0;
     try {
-      const { pass, err } = yield call(
-        testRunner,
-        testString,
-        testTimeout,
-        firstTest
-      );
+      const { pass, err, logs = [] } = rawResults[i] || {};
+
+      const logString = logs.map(log => log.msg).join('\n');
+      if (firstTest && logString) {
+        yield put(updateLogs(logString));
+      }
+
       if (pass) {
         newTest.pass = true;
       } else {
         throw err;
       }
     } catch (err) {
-      const { actual, expected, errorType } = err;
+      const { actual, expected, type } = err;
 
       newTest.message = text
         .replace('--fcc-expected--', expected)
@@ -222,16 +216,22 @@ function* executeTests(testRunner, tests, testTimeout = 5000) {
       if (err === 'timeout') {
         newTest.err = 'Test timed out';
         newTest.message = `${newTest.message} (${newTest.err})`;
-      } else if (errorType) {
-        const msgKey =
-          errorType === 'indentation'
-            ? 'learn.indentation-error'
-            : 'learn.syntax-error';
-        newTest.message = `<p>${i18next.t(msgKey)}</p>`;
       } else {
         const { message, stack } = err;
         newTest.err = message + '\n' + stack;
         newTest.stack = stack;
+      }
+
+      if (
+        type === 'IndentationError' ||
+        type === 'SyntaxError' ||
+        type === 'NameError'
+      ) {
+        const msgKey =
+          type === 'IndentationError'
+            ? 'learn.indentation-error'
+            : 'learn.syntax-error';
+        newTest.message = `<p>${i18next.t(msgKey)}</p>`;
       }
 
       const withIndex = newTest.message.replace(/<p>/, `<p>${i + 1}. `);
@@ -261,7 +261,11 @@ export function* previewChallengeSaga(action) {
   yield delay(700);
 
   const logProxy = yield channel();
-  const proxyLogger = args => logProxy.put(args);
+  const proxyLogger = args => {
+    if (!LOGS_TO_IGNORE.some(msg => args === msg)) {
+      logProxy.put(args);
+    }
+  };
 
   try {
     yield fork(takeEveryConsole, logProxy);
@@ -292,18 +296,26 @@ export function* previewChallengeSaga(action) {
           challengeData.challengeType === challengeTypes.python ||
           challengeData.challengeType ===
             challengeTypes.multifilePythonCertProject ||
-          challengeData.challengeType === challengeTypes.pyLab
+          challengeData.challengeType === challengeTypes.pyLab ||
+          challengeData.challengeType === challengeTypes.dailyChallengePy
         ) {
           yield updatePython(challengeData);
         } else {
           yield call(updatePreview, buildData, finalDocument, proxyLogger);
         }
       } else if (isJavaScriptChallenge(challengeData)) {
-        const runUserCode = getTestRunner(buildData, {
-          proxyLogger
-        });
-        // without a testString the testRunner just evaluates the user's code
-        yield call(runUserCode, null, previewTimeout);
+        const runUserCode = yield call(getTestRunner, buildData);
+
+        // Without an empty testString the testRunner just evaluates the user's
+        // code allowing us to get the console logs.
+        const results = yield call(runUserCode, [''], previewTimeout);
+
+        if (!isEmpty(results)) {
+          const logs = results[0].logs?.filter(
+            log => !LOGS_TO_IGNORE.some(msg => log.msg === msg)
+          );
+          yield put(updateConsole(logs?.map(log => log.msg).join('\n')));
+        }
       }
     }
   } catch (err) {
@@ -326,7 +338,8 @@ function* updatePreviewSaga(action) {
   if (
     challengeData.challengeType === challengeTypes.python ||
     challengeData.challengeType === challengeTypes.multifilePythonCertProject ||
-    challengeData.challengeType === challengeTypes.pyLab
+    challengeData.challengeType === challengeTypes.pyLab ||
+    challengeData.challengeType === challengeTypes.dailyChallengePy
   ) {
     yield updatePython(challengeData);
   } else {

@@ -49,7 +49,7 @@ const mapStateToProps = createSelector(
   isChallengeCompletedSelector,
   isSignedInSelector,
   (
-    output: string[],
+    output: string,
     tests: Test[],
     isChallengeCompleted: boolean,
     isSignedIn: boolean
@@ -82,7 +82,7 @@ interface BackEndProps {
   initTests: (tests: Test[]) => void;
   isChallengeCompleted: boolean;
   isSignedIn: boolean;
-  output: string[];
+  output: string;
   pageContext: {
     challengeMeta: ChallengeMeta;
   };
@@ -112,12 +112,7 @@ const ShowBackEnd = (props: BackEndProps) => {
       updateChallengeMeta,
       data: {
         challengeNode: {
-          challenge: {
-            fields: { tests },
-            title,
-            challengeType,
-            helpCategory
-          }
+          challenge: { challengeType, helpCategory, tests, title }
         }
       },
       pageContext: { challengeMeta }
@@ -143,7 +138,6 @@ const ShowBackEnd = (props: BackEndProps) => {
     data: {
       challengeNode: {
         challenge: {
-          fields: { blockName },
           challengeType,
           forumTopicId,
           title,
@@ -212,7 +206,7 @@ const ShowBackEnd = (props: BackEndProps) => {
             <CompletionModal />
             <HelpModal
               challengeTitle={title}
-              challengeBlock={blockName}
+              challengeBlock={block}
               superBlock={superBlock}
             />
           </Row>
@@ -241,12 +235,11 @@ export const query = graphql`
         block
         translationPending
         fields {
-          blockName
           slug
-          tests {
-            text
-            testString
-          }
+        }
+        tests {
+          text
+          testString
         }
       }
     }

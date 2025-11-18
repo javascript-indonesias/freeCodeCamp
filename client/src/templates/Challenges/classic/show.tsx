@@ -11,15 +11,19 @@ import { editor } from 'monaco-editor';
 import type { FitAddon } from 'xterm-addon-fit';
 
 import { useFeature } from '@growthbook/growthbook-react';
-import { challengeTypes } from '../../../../../shared/config/challenge-types';
+import { challengeTypes } from '../../../../../shared-dist/config/challenge-types';
 import LearnLayout from '../../../components/layouts/learn';
 import { MAX_MOBILE_WIDTH } from '../../../../config/misc';
 
 import type {
-  ChallengeData,
   ChallengeFiles,
   ChallengeMeta,
   ChallengeNode,
+  Hooks,
+  DailyCodingChallengeLanguages,
+  DailyCodingChallengeNode,
+  DailyCodingChallengePageContext,
+  PageContext,
   ResizeProps,
   SavedChallenge,
   SavedChallengeFiles,
@@ -76,8 +80,8 @@ import '../components/test-frame.css';
 
 const mapStateToProps = (state: unknown) => ({
   challengeFiles: challengeFilesSelector(state) as ChallengeFiles,
-  output: consoleOutputSelector(state) as string[],
-  isChallengeCompleted: isChallengeCompletedSelector(state) as boolean,
+  output: consoleOutputSelector(state) as string,
+  isChallengeCompleted: isChallengeCompletedSelector(state),
   savedChallenges: savedChallengesSelector(state) as SavedChallenge[]
 });
 
@@ -105,23 +109,23 @@ interface ShowClassicProps extends Pick<PreviewProps, 'previewMounted'> {
   cancelTests: () => void;
   challengeMounted: (arg0: string) => void;
   createFiles: (arg0: ChallengeFiles | SavedChallengeFiles) => void;
-  data: { challengeNode: ChallengeNode };
+  dailyCodingChallengeLanguage: DailyCodingChallengeLanguages;
+  data: { challengeNode: ChallengeNode | DailyCodingChallengeNode };
   executeChallenge: (options?: { showCompletionModal: boolean }) => void;
   challengeFiles: ChallengeFiles;
   initConsole: (arg0: string) => void;
   initTests: (tests: Test[]) => void;
-  initHooks: (hooks?: { beforeAll: string }) => void;
+  initHooks: (hooks?: Hooks) => void;
   initVisibleEditors: () => void;
   isChallengeCompleted: boolean;
-  output: string[];
-  pageContext: {
-    challengeMeta: ChallengeMeta;
-    projectPreview: {
-      challengeData: ChallengeData;
-    };
-  };
+  isDailyCodingChallenge?: boolean;
+  output: string;
+  pageContext: PageContext | DailyCodingChallengePageContext;
   updateChallengeMeta: (arg0: ChallengeMeta) => void;
   openModal: (modal: string) => void;
+  setDailyCodingChallengeLanguage: (
+    language: DailyCodingChallengeLanguages
+  ) => void;
   setEditorFocusability: (canFocus: boolean) => void;
   setIsAdvancing: (arg: boolean) => void;
   savedChallenges: SavedChallenge[];
@@ -173,7 +177,8 @@ const StepPreview = ({
 }) => {
   return challengeType === challengeTypes.python ||
     challengeType === challengeTypes.multifilePythonCertProject ||
-    challengeType === challengeTypes.pyLab ? (
+    challengeType === challengeTypes.pyLab ||
+    challengeType === challengeTypes.dailyChallengePy ? (
     <XtermTerminal dimensions={dimensions} xtermFitRef={xtermFitRef} />
   ) : (
     <Preview disableIframe={disableIframe} previewMounted={previewMounted} />
@@ -198,9 +203,9 @@ function ShowClassic({
         description,
         instructions,
         hooks,
-        fields: { tests, blockName },
+        tests,
         challengeType,
-        hasEditableBoundaries,
+        hasEditableBoundaries = false,
         superBlock,
         helpCategory,
         forumTopicId,
@@ -223,6 +228,9 @@ function ShowClassic({
   initTests,
   initHooks,
   initVisibleEditors,
+  dailyCodingChallengeLanguage,
+  isDailyCodingChallenge = false,
+  setDailyCodingChallengeLanguage,
   updateChallengeMeta,
   openModal,
   setIsAdvancing,
@@ -305,6 +313,14 @@ function ShowClassic({
 
   // AB testing Pre-fetch in the Spanish locale
   const isPreFetchEnabled = useFeature('prefetch_ab_test').on;
+  const isIndependentLowerJawEnabled = useFeature('independent-lower-jaw').on;
+
+  // Independent lower jaw is only enabled for the urriculum outline workshop
+  const showIndependentLowerJaw =
+    block === 'workshop-curriculum-outline' &&
+    isIndependentLowerJawEnabled &&
+    !isMobile;
+
   useEffect(() => {
     if (isPreFetchEnabled && envData.clientLocale === 'espanol') {
       preloadPage(nextChallengePath);
@@ -351,7 +367,7 @@ function ShowClassic({
       window.removeEventListener('resize', setHtmlHeight);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dailyCodingChallengeLanguage]);
 
   const initializeComponent = (title: string): void => {
     initConsole('');
@@ -415,6 +431,7 @@ function ShowClassic({
         instructionsPanelRef={instructionsPanelRef}
         toolPanel={toolPanel}
         hasDemo={hasDemo}
+        showIndependentLowerJaw={showIndependentLowerJaw}
       />
     );
   };
@@ -439,6 +456,7 @@ function ShowClassic({
           title={title}
           usesMultifileEditor={usesMultifileEditor}
           showProjectPreview={demoType === 'onLoad'}
+          showIndependentLowerJaw={showIndependentLowerJaw}
         />
       )
     );
@@ -502,6 +520,9 @@ function ShowClassic({
               toolPanel: <ToolPanel guideUrl={guideUrl} videoUrl={videoUrl} />,
               hasDemo: demoType === 'onClick'
             })}
+            isDailyCodingChallenge={isDailyCodingChallenge}
+            dailyCodingChallengeLanguage={dailyCodingChallengeLanguage}
+            setDailyCodingChallengeLanguage={setDailyCodingChallengeLanguage}
             isFirstStep={isFirstStep}
             layoutState={layout}
             notes={notes}
@@ -520,12 +541,13 @@ function ShowClassic({
             }
             windowTitle={windowTitle}
             startWithConsoleShown={openConsole}
+            showIndependentLowerJaw={showIndependentLowerJaw}
           />
         )}
         <CompletionModal />
         <HelpModal
           challengeTitle={title}
-          challengeBlock={blockName}
+          challengeBlock={block}
           superBlock={superBlock}
         />
         <VideoModal videoUrl={videoUrl} />
@@ -569,14 +591,12 @@ export const query = graphql`
         forumTopicId
         hooks {
           beforeAll
+          beforeEach
+          afterEach
+          afterAll
         }
         fields {
-          blockName
           slug
-          tests {
-            text
-            testString
-          }
         }
         required {
           link
@@ -592,6 +612,10 @@ export const query = graphql`
           tail
           editableRegionBoundaries
           history
+        }
+        tests {
+          text
+          testString
         }
       }
     }

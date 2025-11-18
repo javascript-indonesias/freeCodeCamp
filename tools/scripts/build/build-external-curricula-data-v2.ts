@@ -1,18 +1,34 @@
 import { mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
-import { submitTypes } from '../../../shared/config/challenge-types';
+import { omit } from 'lodash';
+import { submitTypes } from '../../../shared-dist/config/challenge-types';
 import { type ChallengeNode } from '../../../client/src/redux/prop-types';
 import {
   SuperBlocks,
-  SuperBlockStage
-} from '../../../shared/config/curriculum';
-import fullStackSuperBlockStructure from '../../../curriculum/superblock-structure/full-stack.json';
-import type { Chapter } from '../../../shared/config/chapters';
+  chapterBasedSuperBlocks
+} from '../../../shared-dist/config/curriculum';
+import type { Chapter } from '../../../shared-dist/config/chapters';
+import { getSuperblockStructure } from '../../../curriculum/src/file-handler';
+import { patchBlock } from './patches';
 
-export type CurriculumIntros = {
+export type CurriculumIntros =
+  | BlockBasedCurriculumIntros
+  | ChapterBasedCurriculumIntros;
+
+type BlockBasedCurriculumIntros = {
   [keyValue in SuperBlocks]: {
     title: string;
     intro: string[];
+    blocks: Record<string, { title: string; intro: string[] }>;
+  };
+};
+
+export type ChapterBasedCurriculumIntros = {
+  [keyValue in SuperBlocks]: {
+    title: string;
+    intro: string[];
+    chapters: Record<string, string>;
+    modules: Record<string, string>;
     blocks: Record<string, { title: string; intro: string[] }>;
   };
 };
@@ -51,6 +67,7 @@ export interface GeneratedChapterBasedCurriculumProps {
 
 interface GeneratedChapter {
   dashedName: string;
+  name: string;
   comingSoon?: boolean;
   modules: GeneratedModule[];
   chapterType?: string;
@@ -58,6 +75,7 @@ interface GeneratedChapter {
 
 interface GeneratedModule {
   dashedName: string;
+  name: string;
   comingSoon?: boolean;
   blocks: GeneratedBlock[];
   moduleType?: string;
@@ -68,6 +86,21 @@ interface GeneratedBlock {
   intro: string;
   meta: Record<string, unknown>;
 }
+
+// This enum is based on the `SuperBlockStage` enum in shared/config,
+// but with string value instead of number.
+enum SuperBlockStage {
+  Core = 'core',
+  English = 'english',
+  Professional = 'professional',
+  Extra = 'extra',
+  Legacy = 'legacy'
+}
+
+export type OrderedSuperBlocks = Record<
+  string,
+  Array<{ dashedName: SuperBlocks; public: boolean; title: string }>
+>;
 
 const ver = 'v2';
 
@@ -81,15 +114,42 @@ const intros = JSON.parse(
   readFileSync(blockIntroPath, 'utf-8')
 ) as CurriculumIntros;
 
-export const orderedSuperBlockInfo: Record<
-  string,
-  Array<{ dashedName: SuperBlocks; public: boolean; title: string }>
-> = {
+export const orderedSuperBlockInfo: OrderedSuperBlocks = {
   [SuperBlockStage.Core]: [
     {
-      dashedName: SuperBlocks.FullStackDeveloper,
+      dashedName: SuperBlocks.RespWebDesignV9,
       public: false,
-      title: intros[SuperBlocks.FullStackDeveloper].title
+      title: intros[SuperBlocks.RespWebDesignV9].title
+    },
+    {
+      dashedName: SuperBlocks.JsV9,
+      public: false,
+      title: intros[SuperBlocks.JsV9].title
+    },
+    {
+      dashedName: SuperBlocks.FrontEndDevLibsV9,
+      public: false,
+      title: intros[SuperBlocks.FrontEndDevLibsV9].title
+    },
+    {
+      dashedName: SuperBlocks.PythonV9,
+      public: false,
+      title: intros[SuperBlocks.PythonV9].title
+    },
+    {
+      dashedName: SuperBlocks.RelationalDbV9,
+      public: false,
+      title: intros[SuperBlocks.RelationalDbV9].title
+    },
+    {
+      dashedName: SuperBlocks.BackEndDevApisV9,
+      public: false,
+      title: intros[SuperBlocks.BackEndDevApisV9].title
+    },
+    {
+      dashedName: SuperBlocks.FullStackDeveloperV9,
+      public: false,
+      title: intros[SuperBlocks.FullStackDeveloperV9].title
     }
   ],
 
@@ -246,7 +306,7 @@ export function buildExtCurriculumDataV2(
     });
 
     for (const superBlockKey of superBlockKeys) {
-      if (superBlockKey === SuperBlocks.FullStackDeveloper) {
+      if (chapterBasedSuperBlocks.includes(superBlockKey)) {
         buildChapterBasedCurriculum(superBlockKey);
       } else {
         buildBlockBasedCurriculum(superBlockKey);
@@ -257,31 +317,44 @@ export function buildExtCurriculumDataV2(
   }
 
   function buildChapterBasedCurriculum(superBlockKey: SuperBlocks) {
-    const chapters: Chapter[] = fullStackSuperBlockStructure.chapters;
+    const { chapters } = getSuperblockStructure(superBlockKey) as {
+      chapters: Chapter[];
+    };
     const blocksWithData = curriculum[superBlockKey].blocks;
+
+    const superBlockIntros = intros[
+      superBlockKey
+    ] as ChapterBasedCurriculumIntros[SuperBlocks];
 
     // Skip upcoming chapter/module as the metadata of their blocks
     // is not included in the `curriculum` object.
     const allChapters = chapters.map(chapter => ({
       dashedName: chapter.dashedName,
+      name: superBlockIntros.chapters[chapter.dashedName],
       comingSoon: chapter.comingSoon,
       chapterType: chapter.chapterType,
       modules: chapter.comingSoon
         ? []
         : chapter.modules.map(module => ({
             dashedName: module.dashedName,
+            name: superBlockIntros.modules[module.dashedName],
             comingSoon: module.comingSoon,
             moduleType: module.moduleType,
             blocks: module.comingSoon
               ? []
-              : module.blocks.map(block => {
-                  const blockData = blocksWithData[block.dashedName];
-
-                  return {
-                    intro: intros[superBlockKey].blocks[block.dashedName].intro,
-                    meta: blockData.meta
-                  };
-                })
+              : module.blocks
+                  // Upcoming blocks aren't included in blocksWithData
+                  // and thus they have no metadata and need to be filtered out.
+                  .filter(block => blocksWithData[block])
+                  .map(block => {
+                    const blockData = blocksWithData[block];
+                    return {
+                      intro: superBlockIntros.blocks[block].intro,
+                      meta: patchBlock(
+                        omit(blockData.meta, ['chapter', 'module'])
+                      )
+                    };
+                  })
           }))
     }));
 
@@ -302,7 +375,7 @@ export function buildExtCurriculumDataV2(
 
       return {
         intro: intros[superBlockKey].blocks[blockName].intro,
-        meta: blockData.meta
+        meta: patchBlock(blockData.meta)
       };
     });
 

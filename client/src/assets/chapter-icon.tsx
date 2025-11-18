@@ -1,5 +1,5 @@
 import React from 'react';
-import { FsdChapters } from '../../../shared/config/chapters';
+import { FsdChapters } from '../../../shared-dist/config/chapters';
 import DatabaseIcon from './icons/database';
 import JavaScriptIcon from './icons/javascript';
 import ReactIcon from './icons/react';
@@ -9,6 +9,7 @@ import Html from './icons/html';
 import Css from './icons/css';
 import NodeIcon from './icons/node';
 import Python from './icons/python';
+import Graduation from './icons/graduation';
 
 const iconMap = {
   [FsdChapters.Welcome]: FreeCodeCampIcon,
@@ -18,7 +19,17 @@ const iconMap = {
   [FsdChapters.FrontendLibraries]: ReactIcon,
   [FsdChapters.RelationalDatabases]: DatabaseIcon,
   [FsdChapters.BackendJavascript]: NodeIcon,
-  [FsdChapters.Python]: Python
+  [FsdChapters.Python]: Python,
+  [FsdChapters.Career]: Graduation,
+  [FsdChapters.RwdExam]: Graduation,
+  [FsdChapters.JsExam]: Graduation,
+  [FsdChapters.Fed]: ReactIcon,
+  [FsdChapters.FedExam]: Graduation,
+  [FsdChapters.PythonExam]: Graduation,
+  [FsdChapters.RdbExam]: Graduation,
+  [FsdChapters.Bed]: NodeIcon,
+  [FsdChapters.BedExam]: Graduation,
+  [FsdChapters.FsdExam]: Graduation
 };
 
 type ChapterIconProps = {

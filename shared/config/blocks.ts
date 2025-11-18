@@ -1,10 +1,15 @@
-export enum BlockTypes {
+export enum BlockLabel {
   lecture = 'lecture',
   workshop = 'workshop',
   lab = 'lab',
   review = 'review',
   quiz = 'quiz',
-  exam = 'exam'
+  exam = 'exam',
+  certProject = 'cert-project',
+  /* The tags below refer to the Language Curricula chapter based certifications*/
+  warmup = 'warm-up',
+  learn = 'learn',
+  practice = 'practice'
 }
 
 export enum BlockLayouts {

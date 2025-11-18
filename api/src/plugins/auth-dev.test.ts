@@ -1,13 +1,21 @@
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll
+} from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 
-import { defaultUserEmail } from '../../jest.utils';
-import { HOME_LOCATION } from '../utils/env';
-import { devAuth } from '../plugins/auth-dev';
-import prismaPlugin from '../db/prisma';
-import auth from './auth';
-import cookies from './cookies';
+import { checkCanConnectToDb, defaultUserEmail } from '../../vitest.utils.js';
+import { HOME_LOCATION } from '../utils/env.js';
+import { devAuth } from '../plugins/auth-dev.js';
+import prismaPlugin from '../db/prisma.js';
+import auth from './auth.js';
+import cookies from './cookies.js';
 
-import { newUser } from './__fixtures__/user';
+import { newUser } from './__fixtures__/user.js';
 
 describe('dev login', () => {
   let fastify: FastifyInstance;
@@ -19,6 +27,7 @@ describe('dev login', () => {
     await fastify.register(auth);
     await fastify.register(devAuth);
     await fastify.register(prismaPlugin);
+    await checkCanConnectToDb(fastify.prisma);
   });
 
   beforeEach(async () => {
@@ -31,11 +40,12 @@ describe('dev login', () => {
     await fastify.prisma.user.deleteMany({
       where: { email: defaultUserEmail }
     });
+    await fastify.prisma.$runCommandRaw({ dropDatabase: 1 });
     await fastify.close();
   });
 
   describe('GET /signin', () => {
-    it('should create an account if one does not exist', async () => {
+    test('should create an account if one does not exist', async () => {
       const before = await fastify.prisma.user.count({});
       await fastify.inject({
         method: 'GET',
@@ -48,7 +58,7 @@ describe('dev login', () => {
       expect(after).toBe(before + 1);
     });
 
-    it('should populate the user with the correct data', async () => {
+    test('should populate the user with the correct data', async () => {
       await fastify.inject({
         method: 'GET',
         url: '/signin'
@@ -62,7 +72,7 @@ describe('dev login', () => {
       expect(user.username).toBe(user.usernameDisplay);
     });
 
-    it('should set the jwt_access_token cookie', async () => {
+    test('should set the jwt_access_token cookie', async () => {
       const res = await fastify.inject({
         method: 'GET',
         url: '/signin'
@@ -77,9 +87,9 @@ describe('dev login', () => {
       );
     });
 
-    it.todo('should create a session');
+    test.todo('should create a session');
 
-    it('should redirect to the Referer (if it is a valid origin)', async () => {
+    test('should redirect to the Referer (if it is a valid origin)', async () => {
       const res = await fastify.inject({
         method: 'GET',
         url: '/signin',
@@ -94,7 +104,7 @@ describe('dev login', () => {
       );
     });
 
-    it('should redirect to /valid-language/learn when signing in from /valid-language', async () => {
+    test('should redirect to /valid-language/learn when signing in from /valid-language', async () => {
       const res = await fastify.inject({
         method: 'GET',
         url: '/signin',
@@ -109,7 +119,7 @@ describe('dev login', () => {
       );
     });
 
-    it('should handle referers with trailing slahes', async () => {
+    test('should handle referers with trailing slahes', async () => {
       const res = await fastify.inject({
         method: 'GET',
         url: '/signin',
@@ -124,7 +134,7 @@ describe('dev login', () => {
       );
     });
 
-    it('should redirect to /learn by default', async () => {
+    test('should redirect to /learn by default', async () => {
       const res = await fastify.inject({
         method: 'GET',
         url: '/signin'

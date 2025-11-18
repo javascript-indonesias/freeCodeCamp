@@ -1,4 +1,4 @@
-import { challengeTypes } from '../../../shared/config/challenge-types';
+import { challengeTypes } from '../../../shared-dist/config/challenge-types';
 
 // Show a single project in a certification layout
 
@@ -14,7 +14,9 @@ const projectBasedChallengeTypes = [
   challengeTypes.multifilePythonCertProject,
   challengeTypes.lab,
   challengeTypes.jsLab,
-  challengeTypes.pyLab
+  challengeTypes.pyLab,
+  challengeTypes.dailyChallengeJs,
+  challengeTypes.dailyChallengePy
 ];
 
 export const isProjectBased = (

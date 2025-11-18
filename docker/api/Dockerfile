@@ -1,4 +1,4 @@
-FROM node:20-bookworm AS builder
+FROM node:22-bookworm AS builder
 RUN apt-get update && apt-get install -y jq
 # global installs need root permissions, so have to happen before we switch to
 # the node user
@@ -15,54 +15,46 @@ COPY --chown=node:node curriculum/ curriculum/
 # TODO: AFAIK it's just the intro translations. Those should be folded into the
 # curriculum and then we can remove this.
 COPY --chown=node:node client/ client/
-# TODO: Remove once `@fastify/oauth2` is fixed
-COPY --chown=node:node patches/ patches/
 
 RUN pnpm config set dedupe-peer-dependents false
 # While we want to ignore scripts generally, we do need to generate the prisma
-# client. Note: npx is the simplest way to generate the client without us having
-# to have prisma as a prod dependency. The jq tricks are to ensure we're using
-# the right version of prisma.
-RUN pnpm install -F=api -F=curriculum -F tools/scripts/build -F challenge-parser \
---frozen-lockfile --ignore-scripts
-RUN cd api && npx prisma@$(jq -r '.devDependencies.prisma' < package.json) generate
+# client.
+RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN cd api && pnpm prisma generate
 
 # The api needs to source curriculum.json and build:curriculum relies on the
 # following env vars.
 ARG SHOW_UPCOMING_CHANGES=false
 ENV SHOW_UPCOMING_CHANGES=$SHOW_UPCOMING_CHANGES
 
+RUN pnpm compile:ts
 RUN pnpm build:curriculum
 RUN pnpm -F=api build
 
-FROM node:20-bookworm AS deps
+FROM node:22-bookworm AS deps
 RUN apt-get update && apt-get install -y jq
 
 WORKDIR /home/node/build
 COPY --chown=node:node pnpm*.yaml .
 COPY --chown=node:node package.json .
 COPY --chown=node:node api/ api/
-COPY --chown=node:node shared/ shared/
-# TODO: Remove once `@fastify/oauth2` is fixed
-COPY --chown=node:node patches/ patches/
 RUN npm i -g pnpm@10
 
 # Weirdly this config does not seem necessary for the new api (the same number
 # of deps are installed in both cases), but I'm including it just for
 # consistency.
 RUN pnpm config set dedupe-peer-dependents false
-RUN pnpm install --prod --ignore-scripts -F=shared -F=api --frozen-lockfile
+RUN pnpm install --prod --ignore-scripts -F=api --frozen-lockfile
 RUN cd api && npx prisma@$(jq -r '.devDependencies.prisma' < package.json) generate
 
-FROM node:20-bookworm
+FROM node:22-bookworm
 USER node
 WORKDIR /home/node/fcc
 COPY --from=builder --chown=node:node /home/node/build/api/dist/ ./
 COPY --from=builder --chown=node:node /home/node/build/api/package.json api/
-COPY --from=builder --chown=node:node /home/node/build/shared/config/curriculum.json shared/config/
+COPY --from=builder --chown=node:node /home/node/build/shared-dist/config/curriculum.json shared-dist/config/
 
 COPY --from=deps --chown=node:node /home/node/build/node_modules/ node_modules/
-COPY --from=deps --chown=node:node /home/node/build/shared/node_modules/ shared/node_modules/
 COPY --from=deps --chown=node:node /home/node/build/api/node_modules/ api/node_modules/
 
 CMD ["node", "api/src/server.js"]

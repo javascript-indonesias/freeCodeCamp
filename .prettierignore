@@ -1,6 +1,5 @@
 **/.cache
 **/*fixtures*
-api-server/lib
 client/**/trending.json
 client/**/search-bar.json
 client/config/*.json
@@ -20,3 +19,5 @@ shared/utils/get-lines.test.js
 shared/utils/is-audited.js
 shared/utils/validate.js
 shared/utils/validate.test.js
+shared-dist
+dist

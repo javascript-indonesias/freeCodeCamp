@@ -1,26 +1,27 @@
 import { Portfolio } from '@prisma/client';
 import { type FastifyPluginCallbackTypebox } from '@fastify/type-provider-typebox';
 import { ObjectId } from 'mongodb';
-import _ from 'lodash';
+import { omit } from 'lodash-es';
 
-import { isRestricted } from '../helpers/is-restricted';
-import * as schemas from '../../schemas';
-import { splitUser } from '../helpers/user-utils';
+import { isRestricted } from '../helpers/is-restricted.js';
+import * as schemas from '../../schemas.js';
+import { splitUser } from '../helpers/user-utils.js';
 import {
   normalizeChallenges,
   NormalizedChallenge,
   normalizeFlags,
   normalizeProfileUI,
   normalizeTwitter,
+  normalizeBluesky,
   removeNulls
-} from '../../utils/normalize';
+} from '../../utils/normalize.js';
 import {
   Calendar,
   getCalendar,
   getPoints,
   ProgressTimestamp
-} from '../../utils/progress';
-import { challengeTypes } from '../../../../shared/config/challenge-types';
+} from '../../utils/progress.js';
+import { challengeTypes } from '../../../../shared/config/challenge-types.js';
 
 type ProfileUI = Partial<{
   isLocked: boolean;
@@ -120,7 +121,7 @@ export const userPublicGetRoutes: FastifyPluginCallbackTypebox = (
       }
     },
     async (req, reply) => {
-      const logger = fastify.log.child({ req, reply });
+      const logger = fastify.log.child({ req, res: reply });
       logger.info({ username: req.query.username });
       // TODO(Post-MVP): look for duplicates unless we can make username unique in the db.
       const user = await fastify.prisma.user.findFirst({
@@ -137,7 +138,7 @@ export const userPublicGetRoutes: FastifyPluginCallbackTypebox = (
 
       const [flags, rest] = splitUser(user);
 
-      const publicUser = _.omit(rest, [
+      const publicUser = omit(rest, [
         'currentChallengeId',
         'email',
         'emailVerified',
@@ -150,7 +151,6 @@ export const userPublicGetRoutes: FastifyPluginCallbackTypebox = (
         'unsubscribeId',
         'donationEmails',
         'externalId',
-        'usernameDisplay',
         'isBanned'
       ]);
 
@@ -166,7 +166,8 @@ export const userPublicGetRoutes: FastifyPluginCallbackTypebox = (
               [user.username]: {
                 isLocked: true,
                 profileUI: normalizedProfileUI,
-                username: user.username
+                username: user.username,
+                usernameDisplay: user.usernameDisplay || user.username
               }
             }
           },
@@ -191,12 +192,15 @@ export const userPublicGetRoutes: FastifyPluginCallbackTypebox = (
           ...removeNulls(publicUser),
           ...normalizeFlags(flags),
           ...sharedUser,
+          picture: user.picture ?? '',
           profileUI: normalizedProfileUI,
           // TODO: should this always be returned? Shouldn't some privacy
           // setting control it? Same applies to website, githubProfile,
           // and linkedin.
           twitter: normalizeTwitter(user.twitter),
-          yearsTopContributor: user.yearsTopContributor
+          bluesky: normalizeBluesky(user.bluesky),
+          yearsTopContributor: user.yearsTopContributor,
+          usernameDisplay: user.usernameDisplay || user.username
         };
         return reply.send({
           // TODO(Post-MVP): just return a user object (i.e. returnedUser) and
@@ -244,7 +248,11 @@ export const userPublicGetRoutes: FastifyPluginCallbackTypebox = (
           where: { username }
         })) > 0;
 
-      logger.info(`User exists for username: ${username}`);
+      if (exists) {
+        logger.info(`User exists for username: ${username}`);
+      } else {
+        logger.info(`User does not exist for username: ${username}`);
+      }
       await reply.send({ exists });
     }
   );

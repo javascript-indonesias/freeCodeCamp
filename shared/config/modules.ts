@@ -1,8 +1,8 @@
+import { BlockLabel } from './blocks';
+
 export interface Module {
   dashedName: string;
   comingSoon?: boolean;
-  blocks: {
-    dashedName: string;
-  }[];
-  moduleType?: string;
+  blocks: string[];
+  moduleType?: BlockLabel;
 }

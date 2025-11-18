@@ -1,8 +1,8 @@
 import type { CompletedChallenge } from '@prisma/client';
-import isEmail from 'validator/lib/isEmail';
+import validator from 'validator';
 import type { FastifyPluginCallbackTypebox } from '@fastify/type-provider-typebox';
 
-import { getChallenges } from '../../utils/get-challenges';
+import { getChallenges } from '../../utils/get-challenges.js';
 import {
   certIds,
   certSlugTypeMap,
@@ -12,15 +12,16 @@ import {
   legacyCertifications,
   legacyFullStackCertification,
   upcomingCertifications
-} from '../../../../shared/config/certification-settings';
+} from '../../../../shared/config/certification-settings.js';
 
-import * as schemas from '../../schemas';
-import { normalizeChallenges, removeNulls } from '../../utils/normalize';
+import * as schemas from '../../schemas.js';
+import { normalizeChallenges, removeNulls } from '../../utils/normalize.js';
 
-import { SHOW_UPCOMING_CHANGES } from '../../utils/env';
-import { isKnownCertSlug } from '../helpers/certificate-utils';
+import { SHOW_UPCOMING_CHANGES } from '../../utils/env.js';
+import { isKnownCertSlug } from '../helpers/certificate-utils.js';
 
 const {
+  a2EnglishId,
   legacyFrontEndChallengeId,
   legacyBackEndChallengeId,
   legacyDataVisId,
@@ -28,6 +29,7 @@ const {
   legacyFullStackId,
   respWebDesignId,
   frontEndDevLibsId,
+  javascriptV9Id,
   jsAlgoDataStructId,
   jsAlgoDataStructV8Id,
   dataVis2018Id,
@@ -38,6 +40,7 @@ const {
   dataAnalysisPyV7Id,
   machineLearningPyV7Id,
   relationalDatabaseV8Id,
+  respWebDesignV9Id,
   collegeAlgebraPyV8Id,
   foundationalCSharpV8Id
 } = certIds;
@@ -156,13 +159,17 @@ function createCertTypeIds(challenges: ReturnType<typeof getChallenges>) {
     [certTypes.foundationalCSharpV8]: getCertById(
       foundationalCSharpV8Id,
       challenges
-    )
+    ),
+    [certTypes.javascriptV9]: getCertById(javascriptV9Id, challenges),
+    [certTypes.respWebDesignV9]: getCertById(respWebDesignV9Id, challenges),
 
     // upcoming
+    [certTypes.a2English]: getCertById(a2EnglishId, challenges)
   };
 }
 
 interface CertI {
+  isA2EnglishCert?: boolean;
   isRespWebDesignCert?: boolean;
   isJsAlgoDataStructCert?: boolean;
   isJsAlgoDataStructCertV8?: boolean;
@@ -182,10 +189,13 @@ interface CertI {
   isRelationalDatabaseCertV8?: boolean;
   isCollegeAlgebraPyCertV8?: boolean;
   isFoundationalCSharpCertV8?: boolean;
+  isJavascriptCertV9?: boolean;
+  isRespWebDesignCertV9?: boolean;
 }
 
 function getUserIsCertMap(user: CertI) {
   const {
+    isA2EnglishCert = false,
     isRespWebDesignCert = false,
     isJsAlgoDataStructCert = false,
     isJsAlgoDataStructCertV8 = false,
@@ -204,10 +214,13 @@ function getUserIsCertMap(user: CertI) {
     isMachineLearningPyCertV7 = false,
     isRelationalDatabaseCertV8 = false,
     isCollegeAlgebraPyCertV8 = false,
-    isFoundationalCSharpCertV8 = false
+    isFoundationalCSharpCertV8 = false,
+    isJavascriptCertV9 = false,
+    isRespWebDesignCertV9 = false
   } = user;
 
   return {
+    isA2EnglishCert,
     isRespWebDesignCert,
     isJsAlgoDataStructCert,
     isJsAlgoDataStructCertV8,
@@ -226,7 +239,9 @@ function getUserIsCertMap(user: CertI) {
     isMachineLearningPyCertV7,
     isRelationalDatabaseCertV8,
     isCollegeAlgebraPyCertV8,
-    isFoundationalCSharpCertV8
+    isFoundationalCSharpCertV8,
+    isJavascriptCertV9,
+    isRespWebDesignCertV9
   };
 }
 
@@ -373,6 +388,7 @@ export const protectedCertificateRoutes: FastifyPluginCallbackTypebox = (
           completedChallenges: true,
           is2018DataVisCert: true,
           is2018FullStackCert: true,
+          isA2EnglishCert: true,
           isApisMicroservicesCert: true,
           isBackEndCert: true,
           isDataVisCert: true,
@@ -390,12 +406,14 @@ export const protectedCertificateRoutes: FastifyPluginCallbackTypebox = (
           isQaCertV7: true,
           isRelationalDatabaseCertV8: true,
           isRespWebDesignCert: true,
-          isSciCompPyCertV7: true
+          isSciCompPyCertV7: true,
+          isJavascriptCertV9: true,
+          isRespWebDesignCertV9: true
         }
       });
 
+      const email = updatedUser.email;
       const updatedUserSansNull = removeNulls(updatedUser);
-
       const updatedIsCertMap = getUserIsCertMap(updatedUserSansNull);
 
       // TODO(POST-MVP): Consider sending email based on `user.isEmailVerified` as well
@@ -403,11 +421,11 @@ export const protectedCertificateRoutes: FastifyPluginCallbackTypebox = (
         .map(x => certSlugTypeMap[x])
         .every(certType => updatedIsCertMap[certType]);
       const shouldSendCertifiedEmailToCamper =
-        isEmail(updatedUser.email) && hasCompletedAllCerts;
+        email && validator.default.isEmail(email) && hasCompletedAllCerts;
 
       if (shouldSendCertifiedEmailToCamper) {
         const notifyUser = {
-          to: updatedUser.email,
+          to: email,
           from: 'quincy@freecodecamp.org',
           subject:
             'Congratulations on completing all of the freeCodeCamp certifications!',

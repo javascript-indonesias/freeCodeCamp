@@ -1,23 +1,18 @@
 name: CI - Node.js
 
 on:
-  # Run on push events, but only for the below branches
   push:
     branches:
       - 'main'
       - 'prod-**'
-  # Run on pull requests, but only for the below targets
   pull_request:
     branches:
       - 'main'
       - 'temp-**' # Temporary branches allowed on Upstream
-  # Run on Merge Queue
-  merge_group:
-    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.workflow_run.head_branch || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ !contains(github.ref, 'main') && !contains(github.ref, 'prod-') }}
 
 permissions:
   contents: read
@@ -25,15 +20,15 @@ permissions:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        node-version: [20]
+        node-version: [22]
       fail-fast: false
 
     steps:
-      - name: Checkout Source Files
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           submodules: 'recursive'
 
@@ -45,14 +40,16 @@ jobs:
             exit 1
           fi
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d #v3.0.0
-
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        id: pnpm-install
+        with:
+          run_install: false
 
       - name: Set Environment variables
         run: |
@@ -71,7 +68,7 @@ jobs:
       - name: Lint Source Files
         run: |
           echo pnpm version $(pnpm -v)
-          pnpm run create:shared
+          pnpm compile:ts
           pnpm run build:curriculum
           pnpm run lint
 
@@ -80,25 +77,27 @@ jobs:
   build:
     name: Build
     needs: lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        node-version: [20]
+        node-version: [22]
 
     steps:
-      - name: Checkout Source Files
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           submodules: 'recursive'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d #v3.0.0
-
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        id: pnpm-install
+        with:
+          run_install: false
 
       - name: Set freeCodeCamp Environment Variables
         run: |
@@ -112,27 +111,29 @@ jobs:
   test:
     name: Test
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20]
+        node-version: [22]
 
     steps:
-      - name: Checkout Source Files
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           submodules: 'recursive'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d #v3.0.0
-
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        id: pnpm-install
+        with:
+          run_install: false
 
       - name: Set Environment variables
         run: |
@@ -140,11 +141,7 @@ jobs:
           cat .env
 
       - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@b0a1493307c4e9b82ed61f3858d606c5ff190c64 # v1.10.0
-        with:
-          mongodb-version: 8.0
-          mongodb-replica-set: test-rs
-          mongodb-port: 27017
+        run: docker compose -f docker/docker-compose.yml up -d
 
       - name: Install Dependencies
         run: |
@@ -160,27 +157,29 @@ jobs:
   test-upcoming:
     name: Test - Upcoming Changes
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20]
+        node-version: [22]
 
     steps:
-      - name: Checkout Source Files
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           submodules: 'recursive'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d #v3.0.0
-
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        id: pnpm-install
+        with:
+          run_install: false
 
       - name: Set Environment variables
         run: |
@@ -189,11 +188,7 @@ jobs:
           cat .env
 
       - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@b0a1493307c4e9b82ed61f3858d606c5ff190c64 # v1.10.0
-        with:
-          mongodb-version: 8.0
-          mongodb-replica-set: test-rs
-          mongodb-port: 27017
+        run: docker compose -f docker/docker-compose.yml up -d
 
       - name: Install Dependencies
         run: |
@@ -209,28 +204,31 @@ jobs:
   test-localization:
     name: Test - i18n
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    if: github.event.pull_request.user.login == 'camperbot' && github.head_ref == 'chore/update-i18n-curriculum-submodule'
 
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20]
+        node-version: [22]
         locale: [portuguese, italian]
 
     steps:
-      - name: Checkout Source Files
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           submodules: 'recursive'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d #v3.0.0
-
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: pnpm
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        id: pnpm-install
+        with:
+          run_install: false
 
       - name: Set Environment variables
         run: |
@@ -238,7 +236,7 @@ jobs:
           cat .env
 
       - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@b0a1493307c4e9b82ed61f3858d606c5ff190c64 # v1.10.0
+        uses: supercharge/mongodb-github-action@315db7fe45ac2880b7758f1933e6e5d59afd5e94 # 1.12.1
         with:
           mongodb-version: 8.0
           mongodb-replica-set: test-rs

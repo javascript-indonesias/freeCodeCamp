@@ -1,6 +1,5 @@
 packages:
   - 'api'
-  - 'api-server'
   - 'client'
   - 'curriculum'
   - 'shared'
@@ -10,7 +9,14 @@ packages:
   - 'tools/challenge-parser'
   - 'tools/client-plugins/*'
   - 'tools/crowdin'
-  - 'tools/screenshot-service'
+  - 'tools/daily-challenges'
   - 'tools/scripts/build'
+  - 'tools/scripts/lint'
   - 'tools/scripts/seed'
   - 'tools/scripts/seed-exams'
+  - 'packages/*'
+
+packageExtensions:
+  '@testing-library/jest-dom':
+    peerDependencies:
+      vitest: '*'

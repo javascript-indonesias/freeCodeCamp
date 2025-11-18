@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { useTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
+import { scroller } from 'react-scroll';
 
 import { Container, Spacer } from '@freecodecamp/ui';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
@@ -26,7 +27,7 @@ import {
   isSignedInSelector,
   userTokenSelector
 } from '../redux/selectors';
-import { User } from '../redux/prop-types';
+import type { User } from '../redux/prop-types';
 import {
   submitNewAbout,
   updateMyHonesty,
@@ -50,7 +51,7 @@ type ShowSettingsProps = {
   toggleKeyboardShortcuts: (keyboardShortcuts: boolean) => void;
   updateIsHonest: () => void;
   updateQuincyEmail: (isSendQuincyEmail: boolean) => void;
-  user: User;
+  user: User | null;
   verifyCert: typeof verifyCert;
   path?: string;
   userToken: string | null;
@@ -61,7 +62,12 @@ const mapStateToProps = createSelector(
   userSelector,
   isSignedInSelector,
   userTokenSelector,
-  (showLoading: boolean, user: User, isSignedIn, userToken: string | null) => ({
+  (
+    showLoading: boolean,
+    user: User | null,
+    isSignedIn,
+    userToken: string | null
+  ) => ({
     showLoading,
     user,
     isSignedIn,
@@ -91,34 +97,7 @@ export function ShowSettings(props: ShowSettingsProps): JSX.Element {
     toggleSoundMode,
     toggleKeyboardShortcuts,
     resetEditorLayout,
-    user: {
-      completedChallenges,
-      email,
-      is2018DataVisCert,
-      isApisMicroservicesCert,
-      isJsAlgoDataStructCert,
-      isBackEndCert,
-      isDataVisCert,
-      isFrontEndCert,
-      isInfosecQaCert,
-      isQaCertV7,
-      isInfosecCertV7,
-      isFrontEndLibsCert,
-      isFullStackCert,
-      isRespWebDesignCert,
-      isSciCompPyCertV7,
-      isDataAnalysisPyCertV7,
-      isMachineLearningPyCertV7,
-      isRelationalDatabaseCertV8,
-      isCollegeAlgebraPyCertV8,
-      isFoundationalCSharpCertV8,
-      isJsAlgoDataStructCertV8,
-      isEmailVerified,
-      isHonest,
-      sendQuincyEmail,
-      username,
-      keyboardShortcuts
-    },
+    user,
     navigate,
     showLoading,
     updateQuincyEmail,
@@ -126,11 +105,30 @@ export function ShowSettings(props: ShowSettingsProps): JSX.Element {
     verifyCert,
     userToken
   } = props;
+
   const isSignedInRef = useRef(isSignedIn);
 
   const examTokenFlag = useFeatureIsOn('exam-token-widget');
 
-  if (showLoading) {
+  const handleHashChange = () => {
+    const id = window.location.hash.replace('#', '');
+    if (id) {
+      scroller.scrollTo(id, {
+        smooth: true,
+        duration: 500,
+        offset: -100
+      });
+    }
+  };
+
+  useEffect(() => {
+    handleHashChange();
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  if (showLoading || !user) {
     return <Loader fullScreen={true} />;
   }
 
@@ -138,6 +136,39 @@ export function ShowSettings(props: ShowSettingsProps): JSX.Element {
     navigate(`${apiLocation}/signin`);
     return <Loader fullScreen={true} />;
   }
+
+  const {
+    completedChallenges,
+    email,
+    is2018DataVisCert,
+    isA2EnglishCert,
+    isApisMicroservicesCert,
+    isJavascriptCertV9,
+    isJsAlgoDataStructCert,
+    isBackEndCert,
+    isDataVisCert,
+    isFrontEndCert,
+    isInfosecQaCert,
+    isQaCertV7,
+    isInfosecCertV7,
+    isFrontEndLibsCert,
+    isFullStackCert,
+    isRespWebDesignCert,
+    isRespWebDesignCertV9,
+    isSciCompPyCertV7,
+    isDataAnalysisPyCertV7,
+    isMachineLearningPyCertV7,
+    isRelationalDatabaseCertV8,
+    isCollegeAlgebraPyCertV8,
+    isFoundationalCSharpCertV8,
+    isJsAlgoDataStructCertV8,
+    isEmailVerified,
+    isHonest,
+    sendQuincyEmail,
+    username,
+    keyboardShortcuts
+  } = user;
+
   const sound = (store.get('fcc-sound') as boolean) ?? false;
   const editorLayout = (store.get('challenge-layout') as boolean) ?? false;
   return (
@@ -179,6 +210,7 @@ export function ShowSettings(props: ShowSettingsProps): JSX.Element {
             completedChallenges={completedChallenges}
             createFlashMessage={createFlashMessage}
             is2018DataVisCert={is2018DataVisCert}
+            isA2EnglishCert={isA2EnglishCert}
             isApisMicroservicesCert={isApisMicroservicesCert}
             isBackEndCert={isBackEndCert}
             isDataAnalysisPyCertV7={isDataAnalysisPyCertV7}
@@ -188,6 +220,7 @@ export function ShowSettings(props: ShowSettingsProps): JSX.Element {
             isFrontEndCert={isFrontEndCert}
             isFrontEndLibsCert={isFrontEndLibsCert}
             isFullStackCert={isFullStackCert}
+            isJavascriptCertV9={isJavascriptCertV9}
             isHonest={isHonest}
             isInfosecCertV7={isInfosecCertV7}
             isInfosecQaCert={isInfosecQaCert}
@@ -196,6 +229,7 @@ export function ShowSettings(props: ShowSettingsProps): JSX.Element {
             isQaCertV7={isQaCertV7}
             isRelationalDatabaseCertV8={isRelationalDatabaseCertV8}
             isRespWebDesignCert={isRespWebDesignCert}
+            isRespWebDesignCertV9={isRespWebDesignCertV9}
             isSciCompPyCertV7={isSciCompPyCertV7}
             isJsAlgoDataStructCertV8={isJsAlgoDataStructCertV8}
             username={username}

@@ -7,11 +7,15 @@ import { Container, Col, Row, Button, Spacer } from '@freecodecamp/ui';
 import { isEqual } from 'lodash';
 import store from 'store';
 import { YouTubeEvent } from 'react-youtube';
+import { ObserveKeys } from 'react-hotkeys';
 
 // Local Utilities
+import PrismFormatted from '../components/prism-formatted';
 import LearnLayout from '../../../components/layouts/learn';
 import { ChallengeNode, ChallengeMeta, Test } from '../../../redux/prop-types';
 import ChallengeDescription from '../components/challenge-description';
+import InteractiveEditor from '../components/interactive-editor';
+import ActionRow from '../classic/action-row';
 import Hotkeys from '../components/hotkeys';
 import ChallengeTitle from '../components/challenge-title';
 import VideoPlayer from '../components/video-player';
@@ -25,7 +29,6 @@ import {
   initTests
 } from '../redux/actions';
 import { isChallengeCompletedSelector } from '../redux/selectors';
-import { BlockTypes } from '../../../../../shared/config/blocks';
 import { getChallengePaths } from '../utils/challenge-paths';
 import Scene from '../components/scene/scene';
 import MultipleChoiceQuestions from '../components/multiple-choice-questions';
@@ -40,7 +43,7 @@ import '../video.css';
 
 // Redux Setup
 const mapStateToProps = (state: unknown) => ({
-  isChallengeCompleted: isChallengeCompletedSelector(state) as boolean
+  isChallengeCompleted: isChallengeCompletedSelector(state)
 });
 
 const mapDispatchToProps = {
@@ -68,6 +71,27 @@ interface ShowQuizProps {
   updateSolutionFormValues: () => void;
 }
 
+function renderNodule(
+  nodule: ChallengeNode['challenge']['nodules'][number],
+  showInteractiveEditor: boolean
+) {
+  switch (nodule.type) {
+    case 'paragraph':
+      return <PrismFormatted text={nodule.data} />;
+    case 'interactiveEditor':
+      if (showInteractiveEditor) {
+        return <InteractiveEditor files={nodule.data} />;
+      } else {
+        const files = nodule.data;
+        return files.map((file, index) => (
+          <PrismFormatted key={index} text={file.contentsHtml} />
+        ));
+      }
+    default:
+      return null;
+  }
+}
+
 const ShowGeneric = ({
   challengeMounted,
   data: {
@@ -76,14 +100,14 @@ const ShowGeneric = ({
         assignments,
         bilibiliIds,
         block,
-        blockType,
         description,
+        nodules,
         explanation,
         challengeType,
-        fields: { blockName, tests },
         helpCategory,
         instructions,
         questions,
+        tests,
         title,
         transcript,
         translationPending,
@@ -118,7 +142,6 @@ const ShowGeneric = ({
       title,
       challengeType,
       helpCategory,
-      blockType,
       ...challengePaths
     });
     challengeMounted(challengeMeta.id);
@@ -195,6 +218,20 @@ const ShowGeneric = ({
 
   const sceneSubject = new SceneSubject();
 
+  // interactive editor
+  const hasInteractiveEditor = nodules?.some(
+    nodule => nodule.type === 'interactiveEditor'
+  );
+
+  const [showInteractiveEditor, setShowInteractiveEditor] = useState(
+    () => !!store.get('showInteractiveEditor')
+  );
+
+  const toggleInteractiveEditor = () => {
+    store.set('showInteractiveEditor', !showInteractiveEditor);
+    setShowInteractiveEditor(!showInteractiveEditor);
+  };
+
   return (
     <Hotkeys
       executeChallenge={handleSubmit}
@@ -205,104 +242,127 @@ const ShowGeneric = ({
         <Helmet
           title={`${blockNameTitle} | ${t('learn.learn')} | freeCodeCamp.org`}
         />
-        <Container>
-          <Row>
-            <Spacer size='m' />
-            <ChallengeTitle
-              isCompleted={isChallengeCompleted}
-              translationPending={translationPending}
-            >
-              {title}
-            </ChallengeTitle>
+        <Container fluid>
+          {hasInteractiveEditor && (
+            <ActionRow
+              hasInteractiveEditor={hasInteractiveEditor}
+              showInteractiveEditor={showInteractiveEditor}
+              toggleInteractiveEditor={toggleInteractiveEditor}
+            />
+          )}
 
-            <Spacer size='m' />
+          <Container>
+            <Row>
+              <Spacer size='m' />
+              <ChallengeTitle
+                isCompleted={isChallengeCompleted}
+                translationPending={translationPending}
+              >
+                {title}
+              </ChallengeTitle>
 
-            {description && (
-              <Col md={8} mdOffset={2} sm={10} smOffset={1} xs={12}>
-                <ChallengeDescription
-                  description={description}
-                  superBlock={superBlock}
-                />
-                <Spacer size='m' />
-              </Col>
-            )}
+              <Spacer size='m' />
 
-            <Col lg={10} lgOffset={1} md={10} mdOffset={1}>
-              {videoId && (
-                <>
-                  <VideoPlayer
-                    bilibiliIds={bilibiliIds}
-                    onVideoLoad={handleVideoIsLoaded}
-                    title={title}
-                    videoId={videoId}
-                    videoIsLoaded={videoIsLoaded}
-                    videoLocaleIds={videoLocaleIds}
-                  />
-                  <Spacer size='m' />
-                </>
-              )}
-            </Col>
-
-            {scene && <Scene scene={scene} sceneSubject={sceneSubject} />}
-
-            <Col md={8} mdOffset={2} sm={10} smOffset={1} xs={12}>
-              {transcript && <ChallengeTranscript transcript={transcript} />}
-
-              {instructions && (
-                <>
+              {description && (
+                <Col md={8} mdOffset={2} sm={10} smOffset={1} xs={12}>
                   <ChallengeDescription
-                    instructions={instructions}
+                    description={description}
                     superBlock={superBlock}
                   />
                   <Spacer size='m' />
-                </>
+                </Col>
               )}
 
-              {assignments.length > 0 && (
-                <Assignments
-                  assignments={assignments}
-                  allAssignmentsCompleted={allAssignmentsCompleted}
-                  handleAssignmentChange={handleAssignmentChange}
-                />
-              )}
+              {nodules?.map((nodule, i) => {
+                return (
+                  <React.Fragment key={i}>
+                    {renderNodule(nodule, showInteractiveEditor)}
+                  </React.Fragment>
+                );
+              })}
 
-              {questions.length > 0 && (
-                <MultipleChoiceQuestions
-                  questions={questions}
-                  selectedOptions={selectedMcqOptions}
-                  handleOptionChange={handleMcqOptionChange}
-                  submittedMcqAnswers={submittedMcqAnswers}
-                  showFeedback={showFeedback}
-                />
-              )}
+              <Col lg={10} lgOffset={1} md={10} mdOffset={1}>
+                {videoId && (
+                  <>
+                    <VideoPlayer
+                      bilibiliIds={bilibiliIds}
+                      onVideoLoad={handleVideoIsLoaded}
+                      title={title}
+                      videoId={videoId}
+                      videoIsLoaded={videoIsLoaded}
+                      videoLocaleIds={videoLocaleIds}
+                    />
+                    <Spacer size='m' />
+                  </>
+                )}
+              </Col>
 
-              {explanation ? (
-                <ChallengeExplanation explanation={explanation} />
-              ) : null}
+              {scene && <Scene scene={scene} sceneSubject={sceneSubject} />}
 
-              {!hasAnsweredMcqCorrectly && (
-                <p className='text-center'>{t('learn.answered-mcq')}</p>
-              )}
+              <Col md={8} mdOffset={2} sm={10} smOffset={1} xs={12}>
+                {transcript && <ChallengeTranscript transcript={transcript} />}
 
-              <Button block={true} variant='primary' onClick={handleSubmit}>
-                {blockType === BlockTypes.review
-                  ? t('buttons.submit')
-                  : t('buttons.check-answer')}
-              </Button>
-              <Spacer size='xxs' />
-              <Button block={true} variant='primary' onClick={openHelpModal}>
-                {t('buttons.ask-for-help')}
-              </Button>
+                {instructions && (
+                  <>
+                    <ChallengeDescription
+                      instructions={instructions}
+                      superBlock={superBlock}
+                    />
+                    <Spacer size='m' />
+                  </>
+                )}
 
-              <Spacer size='l' />
-            </Col>
-            <CompletionModal />
-            <HelpModal
-              challengeTitle={title}
-              challengeBlock={blockName}
-              superBlock={superBlock}
-            />
-          </Row>
+                {assignments.length > 0 && (
+                  <ObserveKeys only={['ctrl', 'cmd', 'enter']}>
+                    <Assignments
+                      assignments={assignments}
+                      allAssignmentsCompleted={allAssignmentsCompleted}
+                      handleAssignmentChange={handleAssignmentChange}
+                    />
+                  </ObserveKeys>
+                )}
+
+                {questions.length > 0 && (
+                  <ObserveKeys only={['ctrl', 'cmd', 'enter']}>
+                    <MultipleChoiceQuestions
+                      questions={questions}
+                      selectedOptions={selectedMcqOptions}
+                      handleOptionChange={handleMcqOptionChange}
+                      submittedMcqAnswers={submittedMcqAnswers}
+                      showFeedback={showFeedback}
+                      superBlock={superBlock}
+                    />
+                  </ObserveKeys>
+                )}
+
+                {explanation ? (
+                  <ChallengeExplanation explanation={explanation} />
+                ) : null}
+
+                {!hasAnsweredMcqCorrectly && (
+                  <p className='text-center'>{t('learn.answered-mcq')}</p>
+                )}
+
+                <Button block={true} variant='primary' onClick={handleSubmit}>
+                  {questions.length == 0
+                    ? t('buttons.submit')
+                    : t('buttons.check-answer')}
+                </Button>
+                <Spacer size='xxs' />
+                <Button block={true} variant='primary' onClick={openHelpModal}>
+                  {t('buttons.ask-for-help')}
+                </Button>
+
+                <Spacer size='l' />
+              </Col>
+              <CompletionModal />
+              <HelpModal
+                challengeTitle={title}
+                challengeBlock={block}
+                superBlock={superBlock}
+              />
+            </Row>
+          </Container>
         </Container>
       </LearnLayout>
     </Hotkeys>
@@ -324,25 +384,24 @@ export const query = graphql`
           cid
         }
         block
-        blockType
         challengeType
         description
+        nodules {
+          type
+          data
+        }
         explanation
         helpCategory
         instructions
         fields {
-          blockName
           slug
-          tests {
-            text
-            testString
-          }
         }
         questions {
           text
           answers {
             answer
             feedback
+            audioId
           }
           solution
         }
@@ -384,6 +443,10 @@ export const query = graphql`
           }
         }
         superBlock
+        tests {
+          text
+          testString
+        }
         title
         transcript
         translationPending

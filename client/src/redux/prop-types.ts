@@ -1,7 +1,8 @@
 import { HandlerProps } from 'react-reflex';
-import { SuperBlocks } from '../../../shared/config/curriculum';
-import { BlockLayouts, BlockTypes } from '../../../shared/config/blocks';
-import type { ChallengeFile, Ext } from '../../../shared/utils/polyvinyl';
+import { SuperBlocks } from '../../../shared-dist/config/curriculum';
+import type { Chapter } from '../../../shared-dist/config/chapters';
+import { BlockLayouts, BlockLabel } from '../../../shared-dist/config/blocks';
+import type { ChallengeFile, Ext } from '../../../shared-dist/utils/polyvinyl';
 import { type CertTitle } from '../../config/cert-and-project-map';
 import { UserThemes } from './types';
 
@@ -36,6 +37,7 @@ export type MarkdownRemark = {
 type MultipleChoiceAnswer = {
   answer: string;
   feedback: string | null;
+  audioId: string | null;
 };
 
 export type Question = {
@@ -52,8 +54,6 @@ export type FillInTheBlank = {
 export type Fields = {
   slug: string;
   blockHashSlug: string;
-  blockName: string;
-  tests: Test[];
 };
 type Required = {
   link: string;
@@ -74,7 +74,7 @@ export interface VideoLocaleIds {
 }
 
 // English types for animations
-interface Dialogue {
+export interface Dialogue {
   text: string;
   align: 'left' | 'right' | 'center';
 }
@@ -85,7 +85,7 @@ export interface CharacterPosition {
   z?: number;
 }
 
-interface SceneCommand {
+export interface SceneCommand {
   background?: string;
   character: string;
   position?: CharacterPosition;
@@ -96,6 +96,7 @@ interface SceneCommand {
 }
 
 export type Characters =
+  // English
   | 'Alice'
   | 'Amy'
   | 'Anna'
@@ -118,7 +119,35 @@ export type Characters =
   | 'Sarah'
   | 'Second Candidate'
   | 'Sophie'
-  | 'Tom';
+  | 'Tom'
+
+  // Spanish
+  | 'Alex'
+  | 'Ángela'
+  | 'Camila'
+  | 'Carlos'
+  | 'Elena'
+  | 'Esteban'
+  | 'Joaquín'
+  | 'Julieta'
+  | 'Luis'
+  | 'Luna'
+  | 'Marisol'
+  | 'Mateo'
+  | 'Noelia'
+  | 'René'
+  | 'Sebastián'
+  | 'Diego'
+  | 'Valeria'
+
+  // Chinese
+  | 'Chen Na'
+  | 'Li Hong'
+  | 'Li Ping'
+  | 'Liu Ming'
+  | 'Wang Hua'
+  | 'Zhang'
+  | 'Zhou';
 
 interface SetupCharacter {
   character: Characters;
@@ -152,10 +181,27 @@ export interface PrerequisiteChallenge {
   slug?: string;
 }
 
+type Nodule = ParagraphNodule | InteractiveEditorNodule;
+
+type ParagraphNodule = {
+  type: 'paragraph';
+  data: string;
+};
+
+type InteractiveEditorNodule = {
+  type: 'interactiveEditor';
+  data: {
+    ext: Ext;
+    name: string;
+    contents: string;
+    contentsHtml: string;
+  }[];
+};
+
 export type ChallengeNode = {
   challenge: {
     block: string;
-    blockType: BlockTypes;
+    blockLabel: BlockLabel;
     blockLayout: BlockLayouts;
     certification: string;
     challengeOrder: number;
@@ -164,18 +210,17 @@ export type ChallengeNode = {
     demoType: 'onClick' | 'onLoad' | null;
     description: string;
     challengeFiles: ChallengeFiles;
+    nodules: Nodule[];
     explanation: string;
     fields: Fields;
     fillInTheBlank: FillInTheBlank;
     forumTopicId: number;
-    guideUrl: string;
     head: string[];
     hasEditableBoundaries: boolean;
     helpCategory: string;
-    hooks?: { beforeAll: string };
+    hooks?: Hooks;
     id: string;
     instructions: string;
-    isComingSoon: boolean;
     internal?: {
       content: string;
       contentDigest: string;
@@ -190,7 +235,6 @@ export type ChallengeNode = {
     notes: string;
     prerequisites: PrerequisiteChallenge[];
     isLocked: boolean;
-    isPrivate: boolean;
     order: number;
     questions: Question[];
     quizzes: Quiz[];
@@ -220,6 +264,76 @@ export type ChallengeNode = {
   };
 };
 
+export interface Hooks {
+  beforeAll?: string;
+  beforeEach?: string;
+  afterEach?: string;
+  afterAll?: string;
+}
+
+export type PageContext = {
+  challengeMeta: ChallengeMeta;
+  projectPreview: {
+    challengeData: ChallengeData;
+  };
+};
+
+export type DailyCodingChallengeNode = {
+  challenge: {
+    date: string;
+    id: string;
+    challengeNumber: number;
+    title: string;
+    description: string;
+    superBlock: 'daily-coding-challenge';
+    block: 'daily-coding-challenge';
+    usesMultifileEditor: true;
+
+    helpCategory: 'JavaScript' | 'Python';
+    challengeType: 28 | 29;
+    tests: Test[];
+    challengeFiles: ChallengeFiles;
+
+    // props to satisfy the show classic component
+    instructions: string;
+    demoType: null;
+    hooks?: { beforeAll: string };
+    hasEditableBoundaries?: false;
+    forumTopicId?: number;
+    notes: string;
+    videoUrl?: string;
+    translationPending: false;
+  };
+};
+
+export type DailyCodingChallengePageContext = {
+  challengeMeta: {
+    block: 'daily-coding-challenge';
+    id: string;
+    superBlock: 'daily-coding-challenge';
+    disableLoopProtectTests: boolean;
+
+    // props to satisfy the show classic component
+    isFirstStep: boolean;
+    nextChallengePath?: string;
+    prevChallengePath?: string;
+    disableLoopProtectPreview: boolean;
+  };
+
+  // props to satisfy the show classic component
+  projectPreview: {
+    challengeData?: null;
+  };
+};
+
+export type DailyCodingChallengeLanguages = 'javascript' | 'python';
+
+export interface CompletedDailyCodingChallenge {
+  id: string;
+  completedDate: number;
+  languages: DailyCodingChallengeLanguages[];
+}
+
 type Quiz = {
   questions: QuizQuestion[];
 };
@@ -242,6 +356,20 @@ export type AllChallengesInfo = {
   challengeNodes: ChallengeNode[];
   certificateNodes: CertificateNode[];
 };
+
+export type ChapterBasedSuperBlockStructure = {
+  superBlock: SuperBlocks;
+  chapters: Chapter[];
+};
+
+export type BlockBasedSuperBlockStructure = {
+  superBlock: SuperBlocks;
+  blocks: string[];
+};
+
+export type SuperBlockStructure =
+  | ChapterBasedSuperBlockStructure
+  | BlockBasedSuperBlockStructure;
 
 export type AllChallengeNode = {
   edges: [
@@ -282,6 +410,7 @@ export type User = {
   about: string;
   acceptedPrivacyTerms: boolean;
   completedChallenges: CompletedChallenge[];
+  completedChallengeCount: number;
   completedSurveys: SurveyResults[];
   currentChallengeId: string;
   email: string;
@@ -301,11 +430,12 @@ export type User = {
   profileUI: ProfileUI;
   progressTimestamps: Array<unknown>;
   savedChallenges: SavedChallenges;
-  sendQuincyEmail: boolean;
+  sendQuincyEmail: boolean | null;
   sound: boolean;
   theme: UserThemes;
   keyboardShortcuts: boolean;
   twitter: string;
+  bluesky: string;
   username: string;
   website: string;
   yearsTopContributor: string[];
@@ -326,6 +456,7 @@ export type ProfileUI = {
 
 export type ClaimedCertifications = {
   is2018DataVisCert: boolean;
+  isA2EnglishCert: boolean;
   isApisMicroservicesCert: boolean;
   isBackEndCert: boolean;
   isDataVisCert: boolean;
@@ -336,11 +467,13 @@ export type ClaimedCertifications = {
   isFrontEndLibsCert: boolean;
   isFullStackCert: boolean;
   isInfosecQaCert: boolean;
+  isJavascriptCertV9: boolean;
   isQaCertV7: boolean;
   isInfosecCertV7: boolean;
   isJsAlgoDataStructCert: boolean;
   isRelationalDatabaseCertV8: boolean;
   isRespWebDesignCert: boolean;
+  isRespWebDesignCertV9: boolean;
   isSciCompPyCertV7: boolean;
   isDataAnalysisPyCertV7: boolean;
   isMachineLearningPyCertV7: boolean;
@@ -386,12 +519,10 @@ export interface ChallengeData extends CompletedChallenge {
 export type ChallengeMeta = {
   block: string;
   id: string;
-  introPath: string;
   isFirstStep: boolean;
-  superBlock: SuperBlocks;
+  superBlock: SuperBlocks | 'daily-coding-challenge';
   title?: string;
   challengeType?: number;
-  blockType?: BlockTypes;
   helpCategory: string;
   disableLoopProtectTests: boolean;
   disableLoopProtectPreview: boolean;

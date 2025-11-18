@@ -1,6 +1,6 @@
 // TODO: eventually this should all flow from the curriculum service, since it
 // defines the top-level structure of the curriculum.
-import { Languages } from './i18n';
+import { Languages } from './i18n.js';
 
 // all superblocks
 export enum SuperBlocks {
@@ -25,9 +25,51 @@ export enum SuperBlocks {
   FullStackDeveloper = 'full-stack-developer',
   A2English = 'a2-english-for-developers',
   B1English = 'b1-english-for-developers',
+  A1Spanish = 'a1-professional-spanish',
+  A2Spanish = 'a2-professional-spanish',
+  A2Chinese = 'a2-professional-chinese',
+  A1Chinese = 'a1-professional-chinese',
   RosettaCode = 'rosetta-code',
-  PythonForEverybody = 'python-for-everybody'
+  PythonForEverybody = 'python-for-everybody',
+  BasicHtml = 'basic-html',
+  SemanticHtml = 'semantic-html',
+  DevPlayground = 'dev-playground',
+  FullStackOpen = 'full-stack-open',
+  RespWebDesignV9 = 'responsive-web-design-v9',
+  JsV9 = 'javascript-v9',
+  FrontEndDevLibsV9 = 'front-end-development-libraries-v9',
+  PythonV9 = 'python-v9',
+  RelationalDbV9 = 'relational-databases-v9',
+  BackEndDevApisV9 = 'back-end-development-and-apis-v9',
+  FullStackDeveloperV9 = 'full-stack-developer-v9'
 }
+
+export const languageSuperBlocks = [
+  SuperBlocks.A2English,
+  SuperBlocks.B1English,
+  SuperBlocks.A1Spanish,
+  SuperBlocks.A2Spanish,
+  SuperBlocks.A1Chinese,
+  SuperBlocks.A2Chinese
+];
+
+export enum ChallengeLang {
+  English = 'en-US',
+  Spanish = 'es',
+  Chinese = 'zh-CN'
+}
+
+// Mapping from superblock to a speech recognition language (BCP-47)
+export const superBlockToSpeechLang: Partial<
+  Record<SuperBlocks, ChallengeLang>
+> = {
+  [SuperBlocks.A1Chinese]: ChallengeLang.Chinese,
+  [SuperBlocks.A2Chinese]: ChallengeLang.Chinese,
+  [SuperBlocks.A2English]: ChallengeLang.English,
+  [SuperBlocks.B1English]: ChallengeLang.English,
+  [SuperBlocks.A1Spanish]: ChallengeLang.Spanish,
+  [SuperBlocks.A2Spanish]: ChallengeLang.Spanish
+};
 
 /*
  * SuperBlockStages.Upcoming = SHOW_UPCOMING_CHANGES === 'true'
@@ -44,7 +86,8 @@ export enum SuperBlockStage {
   Extra,
   Legacy,
   Upcoming,
-  Next
+  Next,
+  Catalog
 }
 
 const defaultStageOrder = [
@@ -61,7 +104,9 @@ export function getStageOrder({
 }: Config): SuperBlockStage[] {
   const stageOrder = [...defaultStageOrder];
 
-  if (showUpcomingChanges) stageOrder.push(SuperBlockStage.Upcoming);
+  if (showUpcomingChanges) {
+    stageOrder.push(SuperBlockStage.Upcoming, SuperBlockStage.Catalog);
+  }
   return stageOrder;
 }
 
@@ -71,8 +116,15 @@ export type StageMap = {
 
 // Groups of superblocks in learn map. This should include all superblocks.
 export const superBlockStages: StageMap = {
-  [SuperBlockStage.Core]: [SuperBlocks.FullStackDeveloper],
-
+  [SuperBlockStage.Core]: [
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
+  ],
   [SuperBlockStage.English]: [SuperBlocks.A2English, SuperBlocks.B1English],
   [SuperBlockStage.Professional]: [SuperBlocks.FoundationalCSharp],
   [SuperBlockStage.Extra]: [
@@ -99,10 +151,25 @@ export const superBlockStages: StageMap = {
     SuperBlocks.PythonForEverybody
   ],
   [SuperBlockStage.Next]: [],
-  [SuperBlockStage.Upcoming]: []
+  [SuperBlockStage.Upcoming]: [
+    SuperBlocks.FullStackOpen,
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.FullStackDeveloper
+  ],
+  // Catalog is treated like upcoming for now
+  // Add catalog superBlocks to catalog.ts when adding new superBlocks
+  [SuperBlockStage.Catalog]: [SuperBlocks.BasicHtml, SuperBlocks.SemanticHtml]
 };
 
 Object.freeze(superBlockStages);
+
+export const archivedSuperBlocks = superBlockStages[SuperBlockStage.Legacy];
+
+export const catalogSuperBlocks = superBlockStages[SuperBlockStage.Catalog];
 
 type NotAuditedSuperBlocks = {
   [key in Languages]: SuperBlocks[];
@@ -124,7 +191,21 @@ export const notAuditedSuperBlocks: NotAuditedSuperBlocks = {
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
     SuperBlocks.B1English,
-    SuperBlocks.PythonForEverybody
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.PythonForEverybody,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
   [Languages.Chinese]: [
     SuperBlocks.CodingInterviewPrep,
@@ -133,7 +214,21 @@ export const notAuditedSuperBlocks: NotAuditedSuperBlocks = {
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
     SuperBlocks.B1English,
-    SuperBlocks.PythonForEverybody
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.PythonForEverybody,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
   [Languages.ChineseTraditional]: [
     SuperBlocks.CodingInterviewPrep,
@@ -142,7 +237,21 @@ export const notAuditedSuperBlocks: NotAuditedSuperBlocks = {
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
     SuperBlocks.B1English,
-    SuperBlocks.PythonForEverybody
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.PythonForEverybody,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
   [Languages.Italian]: [
     SuperBlocks.FoundationalCSharp,
@@ -151,27 +260,63 @@ export const notAuditedSuperBlocks: NotAuditedSuperBlocks = {
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
     SuperBlocks.B1English,
-    SuperBlocks.PythonForEverybody
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.PythonForEverybody,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
-  [Languages.Portuguese]: [
-    SuperBlocks.JsAlgoDataStructNew,
-    SuperBlocks.FullStackDeveloper,
-    SuperBlocks.A2English,
-    SuperBlocks.B1English,
-    SuperBlocks.PythonForEverybody
-  ],
+  [Languages.Portuguese]: [],
   [Languages.Ukrainian]: [
     SuperBlocks.JsAlgoDataStructNew,
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
-    SuperBlocks.B1English
+    SuperBlocks.B1English,
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
   [Languages.Japanese]: [
     SuperBlocks.JsAlgoDataStructNew,
     SuperBlocks.TheOdinProject,
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
-    SuperBlocks.B1English
+    SuperBlocks.B1English,
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
   [Languages.German]: [
     SuperBlocks.RelationalDb,
@@ -187,7 +332,21 @@ export const notAuditedSuperBlocks: NotAuditedSuperBlocks = {
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
     SuperBlocks.B1English,
-    SuperBlocks.PythonForEverybody
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.PythonForEverybody,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
   [Languages.Swahili]: [
     SuperBlocks.DataVis,
@@ -210,7 +369,21 @@ export const notAuditedSuperBlocks: NotAuditedSuperBlocks = {
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
     SuperBlocks.B1English,
-    SuperBlocks.PythonForEverybody
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
+    SuperBlocks.PythonForEverybody,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ],
   [Languages.Korean]: [
     SuperBlocks.RespWebDesignNew,
@@ -231,17 +404,48 @@ export const notAuditedSuperBlocks: NotAuditedSuperBlocks = {
     SuperBlocks.FullStackDeveloper,
     SuperBlocks.A2English,
     SuperBlocks.B1English,
+    SuperBlocks.A1Spanish,
+    SuperBlocks.A2Spanish,
+    SuperBlocks.A2Chinese,
+    SuperBlocks.A1Chinese,
     SuperBlocks.PythonForEverybody,
     SuperBlocks.DataVis,
     SuperBlocks.RelationalDb,
-    SuperBlocks.RosettaCode
+    SuperBlocks.RosettaCode,
+    SuperBlocks.BasicHtml,
+    SuperBlocks.SemanticHtml,
+    SuperBlocks.DevPlayground,
+    SuperBlocks.RespWebDesignV9,
+    SuperBlocks.JsV9,
+    SuperBlocks.FrontEndDevLibsV9,
+    SuperBlocks.PythonV9,
+    SuperBlocks.RelationalDbV9,
+    SuperBlocks.BackEndDevApisV9,
+    SuperBlocks.FullStackDeveloperV9
   ]
 };
 
 Object.freeze(notAuditedSuperBlocks);
 
-export const chapterBasedSuperBlocks = [SuperBlocks.FullStackDeveloper];
+export const chapterBasedSuperBlocks = [
+  SuperBlocks.FullStackDeveloper,
+  SuperBlocks.FullStackOpen,
+  SuperBlocks.A1Spanish,
+  SuperBlocks.RespWebDesignV9,
+  SuperBlocks.JsV9,
+  SuperBlocks.FrontEndDevLibsV9,
+  SuperBlocks.PythonV9,
+  SuperBlocks.RelationalDbV9,
+  SuperBlocks.BackEndDevApisV9,
+  SuperBlocks.FullStackDeveloperV9,
+  SuperBlocks.A1Chinese
+];
 Object.freeze(chapterBasedSuperBlocks);
+
+export const certificationCollectionSuperBlocks = [
+  SuperBlocks.FullStackDeveloperV9
+];
+Object.freeze(certificationCollectionSuperBlocks);
 
 type Config = {
   showUpcomingChanges: boolean;

@@ -9,6 +9,7 @@
     "edit": "Edit",
     "copy": "Copy",
     "view": "View",
+    "submit-continue": "Submit and continue",
     "view-code": "View Code",
     "view-project": "View Project",
     "view-cert-title": "View {{certTitle}}",
@@ -37,6 +38,7 @@
     "news": "News",
     "donate": "Donate",
     "supporters": "Supporters",
+    "exam-app": "Exam App",
     "go-to-supporters": "Go to Supporters Page",
     "update-settings": "Update my account settings",
     "sign-me-out": "Sign me out of freeCodeCamp",
@@ -60,6 +62,8 @@
     "check-code": "Check Your Code",
     "check-code-ctrl": "Check Your Code (Ctrl + Enter)",
     "check-code-cmd": "Check Your Code (Command + Enter)",
+    "command-enter": "⌘ + Enter",
+    "ctrl-enter": "Ctrl + Enter",
     "reset": "Reset",
     "reset-step": "Reset This Step",
     "help": "Help",
@@ -86,6 +90,7 @@
     "click-start-course": "Start the course",
     "click-start-project": "Start the project",
     "click-start-exam": "Start the exam",
+    "go-to-course": "Go to course",
     "change-language": "Change Language",
     "resume-project": "Resume project",
     "start-project": "Start project",
@@ -110,16 +115,48 @@
     "closed-caption": "Closed caption",
     "share-on-x": "Share on X",
     "share-on-bluesky": "Share on BlueSky",
-    "share-on-threads": "Share on Threads"
+    "share-on-threads": "Share on Threads",
+    "play-scene": "Press Play",
+    "download-latest-version": "Download the Latest Version",
+    "more-ways-to-sign-in": "More ways to sign in",
+    "sign-in-with-google": "Sign in with Google",
+    "go-to-dcc-today": "Go to Today's Challenge",
+    "go-to-dcc-archive": "Go to Daily Coding Challenge Archive"
+  },
+  "daily-coding-challenges": {
+    "title": "Daily Coding Challenges",
+    "map-title": "Try the coding challenge of the day:",
+    "not-found": "Daily Coding Challenge Not Found.",
+    "release-note": "New challenges are released at midnight US Central time."
+  },
+  "weekdays": {
+    "short": {
+      "sunday": "S",
+      "monday": "M",
+      "tuesday": "T",
+      "wednesday": "W",
+      "thursday": "T",
+      "friday": "F",
+      "saturday": "S"
+    },
+    "long": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    }
   },
   "landing": {
     "big-heading-1": "Learn to code — for free.",
-    "big-heading-1-b": "Learn to code.",
     "big-heading-2": "Build projects.",
+    "big-heading-1-b": "Build Your Skills for Free.",
     "big-heading-3": "Earn certifications.",
-    "big-heading-4": "All for free.",
-    "h2-heading": "Since 2014, more than 40,000 freeCodeCamp.org graduates have gotten jobs at tech companies including:",
-    "h2-heading-b": "More than <strong>100,000</strong> freeCodeCamp.org graduates have gotten <strong>jobs</strong> at tech companies including:",
+    "advance-career": "Advance your career by learning in-demand skills in Programming, DevOps, Cybersecurity, AI Engineering, and English for Developers.",
+    "h2-heading": "More than <strong>100,000</strong> freeCodeCamp.org graduates have gotten <strong>jobs</strong> at tech companies including:",
+    "graduates-work": "More than <strong>100,000</strong> freeCodeCamp graduates work in companies such as",
     "hero-img-description": "freeCodeCamp students at a local study group in South Korea.",
     "hero-img-alt": "A group of people, including a White man, a Black woman, and an Asian woman, gathered around a laptop.",
     "hero-img-uis": "A group of screenshots showing the freeCodeCamp editor interface on both a mobile and desktop device and a certification.",
@@ -175,6 +212,9 @@
     "legacy-curriculum-heading": "Our archived coursework:",
     "next-heading": "Try our beta curriculum:",
     "upcoming-heading": "Upcoming curriculum:",
+    "catalog-heading": "Explore our Catalog:",
+    "fsd-restructure-note": "If you were previously working through our Certified Full Stack Developer curriculum, don't worry - your progress is saved. We've split it into smaller certifications you can earn along your journey.",
+    "archive-link": "Looking for older coursework? Check out <0>our archive page</0>.",
     "faq": "Frequently asked questions:",
     "faqs": [
       {
@@ -340,6 +380,25 @@
       "p7": "As an academic institution that grants achievement-based certifications, we take academic honesty very seriously. If you have any questions about this policy, or suspect that someone has violated it, you can email <0>{{email}}</0> and we will investigate."
     }
   },
+  "exam": {
+    "attempts": "Attempts",
+    "no-attempts-yet": "No attempts yet",
+    "date-taken": "Date Taken",
+    "score": "Score",
+    "status": "Status",
+    "pending": "Pending",
+    "passed": "Passed",
+    "failed": "Failed",
+    "in-progress": "In Progress",
+    "denied": "Retake Required",
+    "download-header": "Download the freeCodeCamp Exam Environment App",
+    "explanation": "To earn a certification, you must take an exam to test your understanding of the material you have learned. Taking the exam is absolutely free of charge.",
+    "version": "The latest version of our app is: {{version}}.",
+    "download-details": "Manually download the app",
+    "unable-to-detect-os": "We were unable to detect your operating system. Please manually download the app below.",
+    "download-trouble": "If you have trouble downloading the correct version, do not hesitate to contact support:",
+    "open-exam-application": "Open Exam Environment Application"
+  },
   "profile": {
     "you-change-privacy": "You need to change your privacy setting in order for your portfolio to be seen by others. This is a preview of how your portfolio will look when made public.",
     "username-change-privacy": "{{username}} needs to change their privacy setting in order for you to view their portfolio.",
@@ -424,6 +483,7 @@
     "ms-link": "Microsoft Link",
     "submit-and-go": "Submit and go to my next challenge",
     "congratulations": "Congratulations, your code passes. Submit your code to continue.",
+    "congratulations-code-passes": "✔ Congratulations. Your code passes.",
     "i-completed": "I've completed this challenge",
     "example-code": "Example Code",
     "test-output": "Your test output will go here",
@@ -468,7 +528,9 @@
       "instructions": "Instructions",
       "notes": "Notes",
       "preview": "Preview",
-      "editor": "Editor"
+      "terminal": "Terminal",
+      "editor": "Editor",
+      "interactive-editor": "Interactive Editor"
     },
     "editor-alerts": {
       "tab-trapped": "Pressing tab will now insert the tab character",
@@ -479,20 +541,44 @@
     "project-preview-title": "Here's a preview of what you will build",
     "demo-project-title": "Here's an example of a project that meets the requirements",
     "github-required": "<0>Create a GitHub</0> account if you don't have one. You'll need it when you create the virtual Linux server machine. This process may take a few minutes.",
-    "gitpod": {
-      "intro": "This course runs in a virtual Linux machine using Gitpod. Follow these instructions to start the course:",
-      "step-1": "<0>Create a GitHub</0> account if you don't have one",
+    "codespaces": {
+      "intro": "This course runs in a virtual Linux machine using GitHub Codespaces. Follow these instructions to start the course:",
+      "step-1": "<0>Create an GitHub account</0> if you don't have one",
       "step-2": "Click the start button below",
-      "step-3": "Login to Gitpod with your GitHub account if you aren't already",
+      "step-3": "On that page, click the create button",
       "step-4": "Once the virtual Linux machine is finished loading, start the CodeRoad extension by:",
       "step-5": "Clicking the \"hamburger\" menu near the top left of the VSCode window,",
-      "step-6": "Going to the \"View\" menu,",
-      "step-7": "Clicking on the \"Command Palette\" option,",
-      "step-8": "and running the \"CodeRoad: Start\" command",
+      "step-6": "Going to the <0>View</0> menu,",
+      "step-7": "Clicking on the <0>Command Palette</0> option,",
+      "step-8": "and running the <0>CodeRoad: Start</0> command",
       "step-9": "Follow the instructions in CodeRoad to complete the course",
-      "continue-project": "Clicking the button below will start a new project. If you have previously started the {{course}} course, go to <0>your Gitpod dashboard</0> to continue.",
-      "learn-more": "Learn more about <0>Gitpod workspaces.</0>",
-      "logout-warning": "If you log out of freeCodeCamp before you complete the entire {{course}} course, your progress will not be saved to your freeCodeCamp account."
+      "continue-project": "Clicking the button below will start a new project. If you have previously started the {{title}} course, go to the <0>repository page</0> to re-open a previous workspace.",
+      "learn-more": "Learn more about <0>Codespace workspaces</0>.",
+      "logout-warning": "If you log out of freeCodeCamp before you complete the entire {{course}} course, your progress will not be saved to your freeCodeCamp account.",
+      "sub-step-3": "Navigate to your <0>Codespaces secrets page</0>",
+      "sub-step-4": "Create a new secret named <0>CODEROAD_WEBHOOK_TOKEN</0>",
+      "sub-step-5": "In the <0>Value</0> field, paste your token",
+      "sub-step-6": "In the <0>Repository access</0> field, select the <1>freeCodeCamp/rdb-alpha</1> repository",
+      "summary": "Codespaces Setup"
+    },
+    "ona": {
+      "intro": "This course runs in a virtual Linux machine using Ona. Follow these instructions to start the course:",
+      "step-1": "<0>Create an Ona account</0> if you don't have one",
+      "step-2": "Click the start button below",
+      "step-3": "In the modal that pops up, click the create button",
+      "step-4": "Once the virtual Linux machine is finished loading, start the CodeRoad extension by:",
+      "step-5": "Clicking the \"hamburger\" menu near the top left of the VSCode window,",
+      "step-6": "Going to the <0>View</0> menu,",
+      "step-7": "Clicking on the <0>Command Palette</0> option,",
+      "step-8": "and running the <0>CodeRoad: Start</0> command",
+      "step-9": "Follow the instructions in CodeRoad to complete the course",
+      "continue-project": "Clicking the button below will start a new project. If you have previously started the {{course}} course, go to <0>your Ona dashboard</0> to continue.",
+      "learn-more": "Learn more about <0>Ona workspaces.</0>",
+      "logout-warning": "If you log out of freeCodeCamp before you complete the entire {{course}} course, your progress will not be saved to your freeCodeCamp account.",
+      "sub-step-3": "Navigate to your <0>Ona secrets page</0>",
+      "sub-step-4": "Create a new secret named <0>CODEROAD_WEBHOOK_TOKEN</0>",
+      "sub-step-5": "In the <0>Secret</0> field, paste your token",
+      "summary": "Ona Setup"
     },
     "local": {
       "intro": "This course runs in a virtual Linux machine on your computer. To run the course, you first need to download each of the following if you don't already have them:",
@@ -514,7 +600,8 @@
       "step-7": "Copy the course URL below, paste it in the URL input, and click \"Load\".",
       "copy-url": "Copy Course URL",
       "step-8": "Click \"Start\" to begin.",
-      "step-9": "Follow the instructions in CodeRoad to complete the course. Note: You may need to restart the terminal once for terminal settings to take effect and the tests to pass."
+      "step-9": "Follow the instructions in CodeRoad to complete the course. Note: You may need to restart the terminal once for terminal settings to take effect and the tests to pass.",
+      "summary": "Local Setup"
     },
     "step-1": "Step 1: Complete the project",
     "step-2": "Step 2: Submit your code",
@@ -594,12 +681,20 @@
       "invalid-transcript": "Your transcript link is not correct, it should have the following form: <1>https://learn.microsoft.com/LOCALE/users/USERNAME/transcript/ID</1> - check the UPPERCASE items in your link are correct."
     },
     "block-type": {
-      "lecture": "Lecture",
+      "lecture": "Theory",
       "workshop": "Workshop",
       "lab": "Lab",
       "review": "Review",
       "quiz": "Quiz",
-      "exam": "Exam"
+      "cert-project": "Certification Project",
+      "exam": "Exam",
+      "warm-up": "Warm-up",
+      "learn": "Learn",
+      "practice": "Practice"
+    },
+    "archive": {
+      "title": "Archived Coursework",
+      "content-not-updated": "<0>Warning:</0> The content in this section is not being updated, but is still available for you to further your learning. We recommend trying <1>our current curriculum</1>."
     }
   },
   "donate": {
@@ -796,7 +891,16 @@
     "iframe-form-submit-alert": "Normally this form would be submitted! It works. This will be submitted to: {{externalLink}}",
     "document-notfound": "document not found",
     "slow-load-msg": "Looks like this is taking longer than usual, please try refreshing the page.",
-    "navigation-warning": "If you leave this page, you will lose your progress. Are you sure?"
+    "navigation-warning": "If you leave this page, you will lose your progress. Are you sure?",
+    "fsd-b-description": "This comprehensive course prepares you to become a Certified Full Stack Developer. You'll learn to build complete web applications using HTML, CSS, JavaScript, React, TypeScript, Node.js, Python, and more.",
+    "fsd-b-cta": "Start Learning",
+    "fsd-b-benefit-1-title": "100k+ Students",
+    "fsd-b-benefit-1-description": "Join more than 100k students taking this certification.",
+    "fsd-b-benefit-2-title": "Professional Certification",
+    "fsd-b-benefit-2-description": "Prove your skills with an official, verifiable certification.",
+    "fsd-b-benefit-3-title": "500+ Exercises",
+    "fsd-b-benefit-3-description": "Solidify your knowledge with plenty of practice.",
+    "or": "OR"
   },
   "icons": {
     "gold-cup": "Gold Cup",
@@ -825,6 +929,8 @@
     "github": "Link to {{username}}'s GitHub",
     "website": "Link to {{username}}'s website",
     "twitter": "Link to {{username}}'s Twitter",
+    "next-month": "Go to next month",
+    "previous-month": "Go to previous month",
     "first-page": "Go to first page",
     "previous-page": "Go to previous page",
     "next-page": "Go to next page",
@@ -849,9 +955,17 @@
     "opens-new-window": "Opens in new window",
     "rsa-checkbox": "I have tried the Read-Search-Ask method",
     "similar-questions-checkbox": "I have searched for similar questions that have already been answered on the forum",
-    "edit-my-profile": "Edit my profile"
+    "edit-my-profile": "Edit my profile",
+    "editor-a11y-off-macos": "{{editorName}} editor content. Press Option+F1 for accessibility options.",
+    "editor-a11y-off-non-macos": "{{editorName}} editor content. Press Alt+F1 for accessibility options.",
+    "editor-a11y-on-macos": "{{editorName}} editor content. Accessibility mode set to 'on'. Press Command+E to disable or press Option+F1 for more options.",
+    "editor-a11y-on-non-macos": "{{editorName}} editor content. Accessibility mode set to 'on'. Press Ctrl+E to disable or press Alt+F1 for more options.",
+    "terminal-output": "Terminal output",
+    "not-available": "Not available",
+    "interactive-editor-desc": "Turn static code examples into interactive editors. This allows you to edit and run the code directly on the page."
   },
   "flash": {
+    "no-email-in-userinfo": "We could not retrieve an email from your chosen provider. Please try another provider or use the 'Continue with Email' option.",
     "honest-first": "To claim a certification, you must first agree to our academic honesty policy",
     "really-weird": "Something really weird happened, if it happens again, please consider raising an issue on https://github.com/freeCodeCamp/freeCodeCamp/issues/new",
     "generic-error": "Something went wrong. Please try again in a moment or contact support@freecodecamp.org if the error persists.",
@@ -895,6 +1009,7 @@
     "not-eligible": "This user is not eligible for freeCodeCamp.org certifications at this time.",
     "profile-private": "{{username}} has chosen to make their profile private. They will need to make their profile public in order for others to be able to view their certification.",
     "certs-private": "{{username}} has chosen to make their certifications private. They will need to make their certifications public in order for others to be able to view them.",
+    "certs-claimable": "You can now claim the {{certName}} certification! Visit your settings page to claim your certification.",
     "not-honest": "{{username}} has not yet agreed to our Academic Honesty Pledge.",
     "user-not-certified": "It looks like user {{username}} is not {{cert}} certified",
     "invalid-challenge": "That does not appear to be a valid challenge submission",
@@ -1000,6 +1115,7 @@
       "heading": "As part of this certification, {{user}} built the following projects and got all automated test suites to pass:",
       "solution": "Solution",
       "no-solution": "error displaying solution, email support@freeCodeCamp.org to get help.",
+      "no-solution-to-display": "No solution to display",
       "source": "Source",
       "footnote": "If you suspect that any of these projects violate the <2>academic honesty policy</2>, please <5>report this to our team</5>.",
       "title": {
@@ -1080,20 +1196,20 @@
       }
     },
     "title": {
-      "responsive-web-design": "Responsive Web Design",
-      "responsive-web-design-cert": "Responsive Web Design Certification",
-      "javascript-algorithms-and-data-structures": "Legacy JavaScript Algorithms and Data Structures",
-      "javascript-algorithms-and-data-structures-cert": "Legacy JavaScript Algorithms and Data Structures Certification",
-      "javascript-algorithms-and-data-structures-v8": "JavaScript Algorithms and Data Structures",
-      "javascript-algorithms-and-data-structures-v8-cert": "JavaScript Algorithms and Data Structures Certification",
-      "front-end-development-libraries": "Front End Development Libraries",
-      "front-end-development-libraries-cert": "Front End Development Libraries Certification",
-      "data-visualization": "Data Visualization",
-      "data-visualization-cert": "Data Visualization Certification",
-      "relational-database-v8": "Relational Database",
-      "relational-database-v8-cert": "Relational Database Certification",
-      "back-end-development-and-apis": "Back End Development and APIs",
-      "back-end-development-and-apis-cert": "Back End Development and APIs Certification",
+      "responsive-web-design": "Legacy Responsive Web Design V8",
+      "responsive-web-design-cert": "Legacy Responsive Web Design V8 Certification",
+      "javascript-algorithms-and-data-structures": "Legacy JavaScript Algorithms and Data Structures V7",
+      "javascript-algorithms-and-data-structures-cert": "Legacy JavaScript Algorithms and Data Structures V7 Certification",
+      "javascript-algorithms-and-data-structures-v8": "Legacy JavaScript Algorithms and Data Structures V8",
+      "javascript-algorithms-and-data-structures-v8-cert": "Legacy JavaScript Algorithms and Data Structures V8 Certification",
+      "front-end-development-libraries": "Front End Development Libraries V8",
+      "front-end-development-libraries-cert": "Front End Development Libraries V8 Certification",
+      "data-visualization": "Data Visualization V8",
+      "data-visualization-cert": "Data Visualization V8 Certification",
+      "relational-database-v8": "Relational Database V8",
+      "relational-database-v8-cert": "Relational Database V8 Certification",
+      "back-end-development-and-apis": "Back End Development and APIs V8",
+      "back-end-development-and-apis-cert": "Back End Development and APIs V8 Certification",
       "quality-assurance-v7": "Quality Assurance",
       "quality-assurance-v7-cert": "Quality Assurance Certification",
       "scientific-computing-with-python-v7": "Scientific Computing with Python",
@@ -1112,8 +1228,28 @@
       "a2-english-for-developers-cert": "A2 English for Developers Certification",
       "b1-english-for-developers": "B1 English for Developers",
       "b1-english-for-developers-cert": "B1 English for Developers Certification",
+      "responsive-web-design-v9": "Responsive Web Design",
+      "responsive-web-design-v9-cert": "Responsive Web Design Certification",
+      "javascript-v9": "JavaScript",
+      "javascript-v9-cert": "JavaScript Certification",
+      "front-end-development-libraries-v9": "Front End Development Libraries",
+      "front-end-development-libraries-v9-cert": "Front End Development Libraries Certification",
+      "python-v9": "Python",
+      "python-v9-cert": "Python Certification",
+      "relational-databases-v9": "Relational Database",
+      "relational-databases-v9-cert": "Relational Database Certification",
+      "back-end-development-and-apis-v9": "Back End Development and APIs",
+      "back-end-development-and-apis-v9-cert": "Back End Development and APIs Certification",
       "full-stack-developer-v9": "Full Stack Developer",
       "full-stack-developer-v9-cert": "Full Stack Developer Certification",
+      "a1-professional-spanish": "A1 Professional Spanish",
+      "a1-professional-spanish-cert": "A1 Professional Spanish Certification",
+      "a2-professional-spanish": "A2 Professional Spanish",
+      "a2-professional-spanish-cert": "A2 Professional Spanish Certification",
+      "a2-professional-chinese": "A2 Professional Chinese",
+      "a2-professional-chinese-cert": "A2 Professional Chinese Certification",
+      "a1-professional-chinese": "A1 Professional Chinese",
+      "a1-professional-chinese-cert": "A1 Professional Chinese Certification",
       "legacy-front-end": "Legacy Front End",
       "legacy-front-end-cert": "Legacy Front End Certification",
       "legacy-back-end": "Legacy Back End",
@@ -1168,12 +1304,17 @@
   "exam-token": {
     "exam-token": "Exam Token",
     "note": "Your exam token is a secret key that allows you to access exams. Do not share this token with anyone.",
-    "invalidation": "If you generate a new token, your old token will be invalidated.",
+    "invalidation-1": "It looks like you have a valid exam token. If you generate a new one, your existing token will be invalidated.",
+    "invalidation-2": "If you generate a new token, your existing token will be invalidated.",
     "generate-exam-token": "Generate Exam Token",
-    "error": "There was an error generating your token, please try again in a moment.",
     "your-exam-token": "Your Exam Token is: {{token}}",
+    "error": "There was an error generating your token, please try again in a moment.",
+    "no-token": "It looks like you don't have a valid exam token.",
+    "copy": "Copy Exam Token",
     "copied": "Token copied to clipboard",
-    "copy-error": "Error copying token to clipboard"
+    "copy-error": "Error copying token to clipboard",
+    "token-usage": "Your Exam Environment authorization token is used to log you into the desktop application.",
+    "generated": "A new Exam Environment authorization token has been generated for your account."
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -1198,7 +1339,7 @@
     "heading": "Warning: This is an early access test deployment",
     "p1": "We welcome you to try this platform in a test-only mode and get early access to upcoming features. Sometimes these changes are referred to as next, beta, staging, etc. interchangeably.",
     "p2": "We thank you for reporting bugs that you encounter and help in making freeCodeCamp.org better.",
-    "p3": "Your progress MAY NOT be saved on your next visit, and any certifications claimed on this deployment are not valid. Learn more by <0>following this link</0>.",
+    "p3": "Your progress MAY NOT be saved on your next visit, and any certifications claimed on this deployment are not valid.",
     "certain": "Accept and Dismiss"
   },
   "survey": {
@@ -1225,6 +1366,36 @@
       "submit": "Submit the survey",
       "exit": "Exit the survey",
       "two-questions": "Congratulations on getting this far. Before you can start the exam, please answer these two short survey questions."
+    }
+  },
+  "speaking-modal": {
+    "heading": "Speaking Practice",
+    "repeat-sentence": "Repeat aloud this sentence:",
+    "play": "Play",
+    "playing": "Playing...",
+    "record": "Record",
+    "stop": "Stop",
+    "incorrect-words": "Incorrect words: {{words}}.",
+    "misplaced-words": "Misplaced words: {{words}}.",
+    "correct-congratulations": "That's correct! Congratulations!",
+    "very-good": "Very good!",
+    "try-again": "Try again.",
+    "no-audio-available": "No audio file available.",
+    "no-speech-detected": "Recording stopped. No speech detected.",
+    "speech-recognition-not-supported": "Speech recognition not supported in this browser.",
+    "recording-speak-now": "Recording. Speak now.",
+    "recording-stopped-processing": "Recording stopped. Processing...",
+    "microphone-access-error": "Error: Could not access microphone.",
+    "speaking-button": "Practice speaking"
+  },
+  "curriculum": {
+    "catalog": {
+      "title": "Explore our Catalog",
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      }
     }
   }
 }

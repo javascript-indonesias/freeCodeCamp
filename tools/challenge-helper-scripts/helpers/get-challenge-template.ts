@@ -11,19 +11,34 @@ interface ChallengeOptions {
   dashedName: string;
   challengeType: string;
   questionCount?: number;
+  challengeLang?: string;
+  inputType?: string;
 }
 
 const buildFrontMatter = ({
   challengeId,
   title,
   dashedName,
-  challengeType
-}: ChallengeOptions) => `---
+  challengeType,
+  challengeLang,
+  inputType
+}: ChallengeOptions) => {
+  const langString = challengeLang
+    ? `
+lang: ${challengeLang}`
+    : '';
+  const inputTypeString = inputType
+    ? `
+inputType: ${inputType}`
+    : '';
+
+  return `---
 id: ${challengeId.toString()}
 title: ${sanitizeTitle(title)}
 challengeType: ${challengeType}
-dashedName: ${dashedName}
+dashedName: ${dashedName}${langString}${inputTypeString}
 ---`;
+};
 
 const buildFrontMatterWithVideo = ({
   challengeId,
@@ -284,6 +299,155 @@ Watch the video below to understand the context of the upcoming lessons.
 # --assignment--
 
 Watch the video.
+
+# --scene--
+
+\`\`\`json
+{
+  "setup": {
+    "background": "chaos.png",
+    "characters": [
+      {
+        "character": "David",
+        "position": {"x":50,"y":80,"z":8},
+        "opacity": 0
+      }
+    ],
+    "audio": {
+      "filename": "1.1-1.mp3",
+      "startTime": 1,
+      "startTimestamp": 5.7,
+      "finishTimestamp": 6.48
+    }
+  },
+  "commands": [
+    {
+      "character": "David",
+      "opacity": 1,
+      "startTime": 0
+    },
+    {
+      "character": "David",
+      "startTime": 1,
+      "finishTime": 0.78,
+      "dialogue": {
+        "text": "I'm Tom.",
+        "align": "center"
+      }
+    },
+    {
+      "character": "Tom",
+      "opacity": 0,
+      "startTime": 1.28
+    }
+  ]
+}
+\`\`\`
+`;
+
+const getGenericChallengeTemplate = (
+  options: ChallengeOptions
+): string => `${buildFrontMatter(options)}
+
+# --description--
+
+Generic challenge description.
+
+# --assignment--
+
+Do the assignment.
+`;
+
+interface DailyCodingChallengeOptions {
+  challengeId: ObjectID;
+  challengeNumber: number;
+}
+
+export const getDailyJavascriptChallengeTemplate = ({
+  challengeId,
+  challengeNumber
+}: DailyCodingChallengeOptions) => `---
+id: ${challengeId.toString()}
+title: "Challenge ${challengeNumber}: Placeholder"
+challengeType: 28
+dashedName: challenge-${challengeNumber}
+---
+
+# --description--
+
+Placeholder description
+
+# --hints--
+
+Placeholder test
+
+\`\`\`js
+assert.isTrue(true);
+\`\`\`
+
+# --seed--
+
+## --seed-contents--
+
+\`\`\`js
+function placeholder(arg) {
+
+  return arg;
+}
+\`\`\`
+
+# --solutions--
+
+\`\`\`js
+function placeholder(arg) {
+
+  return arg;
+}
+\`\`\`
+`;
+
+export const getDailyPythonChallengeTemplate = ({
+  challengeId,
+  challengeNumber
+}: DailyCodingChallengeOptions) => `---
+id: ${challengeId.toString()}
+title: "Challenge ${challengeNumber}: Placeholder"
+challengeType: 29
+dashedName: challenge-${challengeNumber}
+---
+
+# --description--
+
+Placeholder description
+
+# --hints--
+
+Placeholder test
+
+\`\`\`js
+({test: () => { runPython(\`
+from unittest import TestCase
+TestCase().assertTrue(True)\`)
+}})
+\`\`\`
+
+# --seed--
+
+## --seed-contents--
+
+\`\`\`py
+def placeholder(arg):
+
+    return arg
+\`\`\`
+
+# --solutions--
+
+\`\`\`py
+def placeholder(arg):
+
+    return arg
+\`\`\`
 `;
 
 type Template = (opts: ChallengeOptions) => string;
@@ -331,5 +495,7 @@ const challengeTypeToTemplate: {
   19: getMultipleChoiceChallengeTemplate,
   20: null,
   21: getDialogueChallengeTemplate,
-  22: getFillInTheBlankChallengeTemplate
+  22: getFillInTheBlankChallengeTemplate,
+  23: null,
+  24: getGenericChallengeTemplate
 };
