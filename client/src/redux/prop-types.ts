@@ -49,6 +49,7 @@ export type Question = {
 export type FillInTheBlank = {
   sentence: string;
   blanks: MultipleChoiceAnswer[];
+  inputType?: 'pinyin-tone' | 'pinyin-to-hanzi';
 };
 
 export type Fields = {
@@ -144,10 +145,11 @@ export type Characters =
   | 'Chen Na'
   | 'Li Hong'
   | 'Li Ping'
+  | 'Lin Yating'
   | 'Liu Ming'
   | 'Wang Hua'
-  | 'Zhang'
-  | 'Zhou';
+  | 'Zhang Wei'
+  | 'Zhou Yongjie';
 
 interface SetupCharacter {
   character: Characters;
